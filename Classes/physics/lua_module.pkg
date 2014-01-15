@@ -1,0 +1,7 @@
+$#include "tolua_lua_module.hpp"
+
+$pfile "game_physics_world.pkg"
+$pfile "debug_physics_layer.pkg"
+$pfile "game_sprite.pkg"
+$pfile "bomb_sprite.pkg"
+$pfile "b2body.pkg"

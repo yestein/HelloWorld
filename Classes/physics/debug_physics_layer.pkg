@@ -1,0 +1,5 @@
+class DebugPhysicsLayer : public Layer {
+	DebugPhysicsLayer();
+    ~DebugPhysicsLayer();
+    static DebugPhysicsLayer* create();
+};

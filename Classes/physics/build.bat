@@ -1,0 +1,1 @@
+tolua++ -o tolua_lua_module.cpp lua_module.pkg

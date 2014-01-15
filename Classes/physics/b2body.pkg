@@ -1,0 +1,58 @@
+$#include "Box2D\Dynamics\b2Body.h"
+
+class b2Body
+{
+public:
+
+    float GetAngle() const;
+
+    void SetAngularVelocity(float omega);
+
+    float GetAngularVelocity() const;
+
+
+    void ApplyTorque(float torque, bool wake);
+
+    void ApplyAngularImpulse(float impulse, bool wake);
+
+    float GetMass() const;
+
+    float GetInertia() const;
+
+    float GetLinearDamping() const;
+
+    void SetLinearDamping(float linearDamping);
+
+    float GetAngularDamping() const;
+
+    void SetAngularDamping(float angularDamping);
+
+    float GetGravityScale() const;
+
+    void SetGravityScale(float scale);
+
+    void SetBullet(bool flag);
+
+    bool IsBullet() const;
+
+    void SetSleepingAllowed(bool flag);
+
+    bool IsSleepingAllowed() const;
+
+    void SetAwake(bool flag);
+
+    bool IsAwake() const;
+
+    void SetActive(bool flag);
+
+    bool IsActive() const;
+
+    void SetFixedRotation(bool flag);
+
+    bool IsFixedRotation() const;
+
+    b2Body* GetNext();
+    const b2Body* GetNext() const;
+
+    void Dump();
+ }

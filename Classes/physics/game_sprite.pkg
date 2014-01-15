@@ -1,0 +1,20 @@
+$#include "game_sprite.h"  
+
+class GameSprite : public Sprite
+{
+public:
+    static GameSprite* create();
+    static GameSprite* createWithTexture(Texture2D *pTexture);
+    static GameSprite* createWithTexture(Texture2D *pTexture, const Rect& rect);
+    static GameSprite* createWithSpriteFrame(SpriteFrame *pSpriteFrame);
+    static GameSprite* createWithSpriteFrameName(const char *pszSpriteFrameName);
+    static GameSprite* create(const char *pszFileName);
+    static GameSprite* create(const char *pszFileName, const Rect& rect);
+	
+	GameSprite();
+    ~GameSprite();
+	
+    virtual int IsBomb() {return FALSE;};
+    virtual int OnBomb(){ return FALSE};
+	b2Body* GetB2Body() { return m_ptr_b2body;};
+};

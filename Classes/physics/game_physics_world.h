@@ -1,0 +1,266 @@
+
+
+
+#ifndef __GAME_PHYSICS_WORLD_H__
+#define __GAME_PHYSICS_WORLD_H__
+
+#include "Base.h"
+#include "cocos2d.h"
+#include "Box2D/Box2D.h"
+USING_NS_CC;
+
+#define PTM_RATIO 32
+#define MAX_JOINT_NUM 1000
+
+class GameSprite;
+
+class BombCallback
+{
+public:
+    virtual ~BombCallback() {}
+
+    /// Called for each fixture found in the query AABB.
+    /// @return false to terminate the query.
+    virtual bool BeBombed(GameSprite* ptr_sprite) = 0;
+};
+
+class GamePhysicsWorld : public b2ContactListener
+{
+public:
+    typedef std::set<GameSprite*> CollideVector;
+    struct MATERIAL
+    {
+        MATERIAL(float density, float friction, float restitution)
+        {
+            float_density = density;
+            float_friction = friction;
+            float_restitution = restitution;
+        }
+        float float_density;
+        float float_friction;
+        float float_restitution;
+    };
+
+    struct JOINT_NODE
+    {
+        b2Joint* ptr_joint;
+        int index_next;
+    };
+
+    
+public:
+	GamePhysicsWorld():m_ptr_b2world(NULL), m_ptr_bomb_callback(NULL) {};
+	~GamePhysicsWorld(){};
+	static GamePhysicsWorld* GetInstance()
+	{
+		if (!ms_ptr_instance)
+		{
+			ms_ptr_instance = new GamePhysicsWorld();
+		}
+		return ms_ptr_instance;
+	}
+	BOOL Init(float float_gravity_x, float float_gravity_y, int num_max_joint = MAX_JOINT_NUM);
+	BOOL Uninit();
+
+    // Callbacks for derived classes.
+    virtual void BeginContact(b2Contact* contact) override{ B2_NOT_USED(contact); };
+    virtual void EndContact(b2Contact* contact) override { B2_NOT_USED(contact); }
+    virtual void PreSolve(b2Contact* contact, const b2Manifold* oldManifold) override;
+//     {
+//         B2_NOT_USED(contact);
+//         B2_NOT_USED(oldManifold);
+//     }
+    virtual void PostSolve(b2Contact* contact, const b2ContactImpulse* impulse) override
+    {
+        B2_NOT_USED(contact);
+        B2_NOT_USED(impulse);
+    }
+
+    BOOL SetupBombCallBack(BombCallback* ptr_callback);
+
+    BOOL CreateRectEdge(
+        float float_left,
+        float float_right, 
+        float float_buttom,
+        float float_top
+    );
+
+    BOOL SetBoxBody(
+        GameSprite* ptr_sprite, 
+        float float_width,
+        float float_height,
+        MATERIAL* ptr_material,
+        float float_offset_x,
+        float float_offset_y,
+        BOOL bool_dynamic,
+        BOOL bool_is_bullet = 0
+    );
+
+    BOOL SetCircleBody(GameSprite* ptr_sprite, 
+        float float_radius,
+        MATERIAL* ptr_material,
+        float float_offset_x,
+        float float_offset_y,
+        BOOL bool_dynamic,
+        BOOL bool_is_bullet = 0
+    );
+
+    BOOL SetShapeBody(
+        GameSprite* ptr_sprite,
+        b2Shape* ptr_shape,
+        MATERIAL* ptr_material,
+        float float_offset_x,
+        float float_offset_y,
+        BOOL bool_dynamic,
+        BOOL bool_is_bullet = 0
+    );
+
+    BOOL SetBodyAngularVelocity(GameSprite* ptr_sprite, float float_velocity);
+
+    // 从.plist文件中读取多边形
+    BOOL LoadPolygonBodyFromFile(const std::string &file_name);
+    BOOL SetPolygonBodyWithShapeName(
+        GameSprite* ptr_sprite,
+        const std::string &shape_name,
+        float float_offset_x,
+        float float_offset_y,
+        BOOL bool_dynamic_body
+    );
+
+    // 绑定有距线段关节
+    int CreateDistanceJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,    
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        float float_length = -1.0f,
+        float float_frequency_hz = 0.0f,
+        float float_damping_ratio = 0.0f
+    );
+
+    // 绑定伸缩关节
+    int CreatePrismaticJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        float float_axis_x,
+        float float_axis_y,
+        float float_lower,
+        float float_upper,
+        BOOL bool_collide_connected = 0,
+        float float_motor_speed = 0.0f,
+        float float_max_motor_force = 0.0f
+    );
+
+    // 绑定固定伸缩关节
+    int CreateFixedPrismaticJoint(
+        GameSprite* ptr_sprite,
+        float float_offset_anchor_x,
+        float float_offset_anchor_y,
+        float float_axis_x,
+        float float_axis_y,
+        float float_lower,
+        float float_upper,
+        BOOL bool_collide_connected = 0,
+        float float_motor_speed = 0.0f,
+        float float_max_motor_force = 0.0f
+    );    
+
+    // 绑定旋转关节，注：角度单位为弧度制（π）
+    int CreateRevoluteJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,    
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        BOOL bool_enable_limit = 0,
+        float float_lower_angle = 0.0f,
+        float float_upper_angle = 0.0f,
+        float float_motor_speed = 0.0f,
+        float float_max_motor_torque = 0.0f
+    );
+
+    // 绑定固定旋转关节，注：角度单位为弧度制（π）
+    int CreateFixedRevoluteJoint(
+        GameSprite* ptr_sprite,
+        float float_offset_anchor_x,
+        float float_offset_anchor_y,
+        BOOL bool_enable_limit = 0,
+        float float_lower_angle = 0.0f,
+        float float_upper_angle = 0.0f,
+        float float_motor_speed = -10.0f,
+        float float_max_motor_torque = 0.0f
+    );
+
+    // 绑定车轮关节（与旋转关节的区别在于可以产生颠簸效果）
+    int CreateWheelJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,    
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        float float_axis_x,
+        float float_axis_y,
+        float float_damping_ratio = 0.7f,
+        BOOL bool_enable_motor = 1,
+        float float_motor_speed = -10.0f,
+        float float_max_motor_torque = 2.0f
+    );
+
+    
+    // 绑定齿轮关节
+    int CreateGearJoint(
+        GameSprite* ptr_sprite_a,
+        GameSprite* ptr_sprite_b,
+        int joint_id_a,
+        int joint_id_b,
+        float float_ratio
+    );
+
+    BOOL DestoryJoint(int joint_id);    
+
+    BOOL ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y);
+    BOOL ApplyImpulseByAngular(GameSprite* sprite, float float_angular, float float_strength);
+
+    BOOL Update(float float_delta);
+    
+    BOOL Bomb(
+        float float_bomb_x,
+        float float_bomb_y, 
+        float float_power_linear,
+        float float_power_angular,
+        float float_bomb_radius
+    );
+
+    BOOL MouseDown(float float_x, float float_y);
+    void MouseUp(float float_x, float float_y);
+    BOOL MouseMove(float float_x, float float_y);
+
+    b2World* GetWorld(){ return m_ptr_b2world;}
+
+private:
+
+    BOOL ProcessCollide();
+    int addJoint(b2Joint* ptr_joint);
+    b2Joint* getJoint(int joint_id);
+private:
+	static GamePhysicsWorld* ms_ptr_instance;
+    CollideVector m_array_collide;
+    JOINT_NODE* m_ptr_pool_joint;
+    int m_int_index_free;
+    int m_int_used;
+	b2World* m_ptr_b2world;
+
+    b2Vec2 m_b2vec_mouse_position;
+    b2MouseJoint* m_ptr_b2joint_mouse;
+    b2Body* m_ptr_b2body_ground;
+    BombCallback* m_ptr_bomb_callback;
+};
+#endif
