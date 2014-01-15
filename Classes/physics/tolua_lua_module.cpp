@@ -17,7 +17,7 @@ TOLUA_API int  tolua_lua_module_open (lua_State* tolua_S);
 #include "game_physics_world.h"  
 #include "game_sprite.h"  
 #include "bomb_sprite.h"  
-#include "Box2D\Dynamics\b2Body.h"
+#include "Box2D/Dynamics/b2Body.h"
 
 /* function to release collected object via destructor */
 #ifdef __cplusplus

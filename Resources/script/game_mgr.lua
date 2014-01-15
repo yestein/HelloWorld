@@ -68,8 +68,8 @@ function GameMgr:AddReturnMenu(scene, szSceneName)
     local tbElement = {
 	    [1] = {
 	        [1] = {
-				szNormal   = "ui/Icon.png",
-				szSelected = "ui/Icon.png",
+				szNormal   = "ui/icon.png",
+				szSelected = "ui/icon.png",
 	        	fnCallBack = function()
 	        		SceneMgr:DestroyScene(szSceneName)
 	        		CCDirector:getInstance():popScene()

@@ -41,14 +41,8 @@ Def.tbColor = {
 	["yellow"] = cc.c3b(255, 255, 0),
 }
 
-if device == "win32" then
-	Def.szBGImg     = "image/background.png"
-	Def.szTitleFile = "image/ui/title_bg.png"
-	Def.szFightImg  = "image/icon.png"
-	Def.szMainBGImg = "image/main.png"
-else
-	Def.szBGImg     = "background.png"
-	Def.szTitleFile = "title_bg.png"
-	Def.szFightImg  = "icon.png"
-	Def.szMainBGImg = "main.png"
-end
+Def.szBGImg     = "image/background.png"
+Def.szTitleFile = "image/ui/title_bg.png"
+Def.szFightImg  = "image/icon.png"
+Def.szMainBGImg = "image/main.png"
+

@@ -997,14 +997,15 @@ BOOL GamePhysicsWorld::ApplyImpulseByAngular(GameSprite* sprite, float float_ang
     int num_ret_code = FALSE;
 
     b2Body* ptr_b2body = NULL;
+    
+    float float_impulse_x = float_strength * cos(CC_DEGREES_TO_RADIANS(float_angular));
+    float float_impulse_y = float_strength * sin(CC_DEGREES_TO_RADIANS(float_angular));
 
     KGLOG_PROCESS_ERROR(sprite);
 
     ptr_b2body = sprite->GetB2Body();
     KGLOG_PROCESS_ERROR(ptr_b2body);
 
-    float float_impulse_x = float_strength * cos(CC_DEGREES_TO_RADIANS(float_angular));
-    float float_impulse_y = float_strength * sin(CC_DEGREES_TO_RADIANS(float_angular));
     ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition(), true);
 
     num_result = TRUE;
