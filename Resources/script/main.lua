@@ -15,7 +15,7 @@ function __G__TRACKBACK__(msg)
     print("----------------------------------------")
 end
 
-require("preload")
+require("script/preload.lua")
 
 local sharedDirector = CCDirector:getInstance()
 local sharedEngine = SimpleAudioEngine:getInstance()

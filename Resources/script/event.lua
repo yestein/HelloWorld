@@ -6,6 +6,10 @@
 -- Modify       :
 --=======================================================================
 
+if not Event then
+	Event = {}
+end
+
 function Event:Preload()
 	self.tbGlobalEvent = {}
 end

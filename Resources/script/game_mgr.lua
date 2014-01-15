@@ -5,6 +5,12 @@
 -- Description  :
 -- Modify       :
 --=======================================================================
+
+
+if not GameMgr then
+	GameMgr = {}
+end
+
 local szMenuFontName = "MarkerFelt-Thin"
 if device == "win32" then
 	szMenuFontName = "Microsoft Yahei"

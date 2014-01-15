@@ -6,6 +6,10 @@
 -- Modify       :
 --=======================================================================
 
+if not MenuMgr then
+	MenuMgr = {}
+end
+
 function MenuMgr:Init()
 	self.tbMenu = {}
 end

@@ -5,6 +5,11 @@
 -- Description  :
 -- Modify       :
 --===================================================
+
+if not Misc then
+	Misc = {}
+end
+
 if not Misc.nPrimeIndex then
 	Misc.nPrimeIndex = 1
 	Misc.nPrimeIndexIndex = 1

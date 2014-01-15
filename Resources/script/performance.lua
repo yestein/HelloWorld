@@ -6,6 +6,10 @@
 -- Modify       :
 --=======================================================================
 
+if not Performance then
+	Performance  = {}
+end
+
 Performance.MAX_DISPLAY_DAMAGE = 20
 
 local szFlyLabelFont = "Courier"

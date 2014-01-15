@@ -6,58 +6,19 @@
 -- Modify       :
 --===================================================
 
-if not _G.Def then
-	_G.Def = {}
-end
-
-if not _G.Event then
-	_G.Event = {}
-end
-
-if not _G.Misc then
-	_G.Misc = {}
-end
-
-if not _G.GameMgr then
-	_G.GameMgr = {}
-end
-
-if not _G.Lib then
-	_G.Lib = {}
-end
-
-if not _G.MenuMgr then
-	_G.MenuMgr = {}
-end
-
-if not _G.SceneMgr then
-	_G.SceneMgr = {}
-end
-
-if not _G.Debug then
-	_G.Debug  = {}
-end
-
-if not _G.Performance then
-	_G.Performance  = {}
-end
-
-require("define")
-require("misc_math")
-require("lib")
-require("event")
-require("dbg")
-require("performance")
-require("game_mgr")
-require("menu")
-require("scene_mgr")
-require("scene_base")
-require("game_scene")
-require("physics_scene")
-require("main_scene")
-require("ui")
-require("demo_scene")
-require("battle_logic")
-
-
-
+require("script/define.lua")
+require("script/misc_math.lua")
+require("script/lib.lua")
+require("script/event.lua")
+require("script/dbg.lua")
+require("script/performance.lua")
+require("script/game_mgr.lua")
+require("script/menu.lua")
+require("script/scene_mgr.lua")
+require("script/scene_base.lua")
+require("script/game_scene.lua")
+require("script/physics_scene.lua")
+require("script/main_scene.lua")
+require("script/ui.lua")
+require("script/demo_scene.lua")
+require("script/battle_logic.lua")

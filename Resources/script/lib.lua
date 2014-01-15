@@ -6,6 +6,10 @@
 -- Modify       :
 --===================================================
 
+if not Lib then
+	Lib = {}
+end
+
 local MetaTable = {
 	__index = function(table, key)
 		local v = rawget(table, key)

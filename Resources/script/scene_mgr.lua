@@ -5,7 +5,12 @@
 -- Description  :
 -- Modify       :
 --=======================================================================
-require("scene_base")
+
+if not SceneMgr then
+    SceneMgr = {}
+end
+
+require("script/scene_base.lua")
 
 if not SceneMgr.tb_class_logic_scene then
     SceneMgr.tb_class_logic_scene = {}

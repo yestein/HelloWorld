@@ -6,7 +6,9 @@
 -- Modify       :
 --===================================================
 
-local Def = _G.Def
+if not Def then
+	Def = {}
+end
 
 local Id = 1
 local function Accumulate(nId)
@@ -22,7 +24,6 @@ Def.szMenuFontName = "MarkerFelt-Thin"
 if device == "win32" then
 	Def.szMenuFontName = "Microsoft Yahei"
 end
-
 
 Def.ZOOM_LEVEL_WORLD = 1
 Def.ZOOM_LEVEL_BULLET = 2

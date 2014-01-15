@@ -26,7 +26,6 @@ function BattleLogic:Init(tb_player, tb_enemy)
 end
 
 function BattleLogic:Uninit()
-	Event:UnRegistEvent("UIButton", self.nRegButton)
 end
 
 function BattleLogic:StartMove(str_direction)
