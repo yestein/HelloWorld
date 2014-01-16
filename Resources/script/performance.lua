@@ -7,7 +7,7 @@
 --=======================================================================
 
 if not Performance then
-	Performance  = {}
+	Performance = {}
 end
 
 Performance.MAX_DISPLAY_DAMAGE = 20

@@ -9,6 +9,7 @@
 if not Ui then
     Ui = {}
 end
+
 Ui.MSG_MAX_COUNT = 3
 
 --keep same with "cocos\gui\UIWidget.h"
@@ -179,9 +180,10 @@ function Ui:SysMsg(tb_ui, szMsg, str_color)
 end
 
 function Ui:LoadJson(cc_layer, str_file_name)
-    local widget = ccs.GUIReader:getInstance():widgetFromJsonFile(str_file_name)
-    cc_layer:addChild(widget)
-    return tolua.cast(widget, "Widget")
+    local uilayer = ccs.UILayer:create()
+    uilayer:addWidget(ccs.GUIReader:getInstance():widgetFromJsonFile("control/control.ExportJson"))
+    cc_layer:addChild(uilayer)
+    return uilayer
 end
 
 function Ui:RegistEvent()

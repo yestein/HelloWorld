@@ -7,7 +7,7 @@
 --=======================================================================
 
 if not Debug then
-	Debug  = {}
+	Debug = {}
 end
 
 Debug.MODE_BLACK_LIST = 1

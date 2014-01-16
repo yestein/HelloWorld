@@ -6,6 +6,10 @@
 -- Modify       :
 --=======================================================================
 
+if not SceneMgr then
+	SceneMgr = {}
+end
+
 if not SceneMgr._SceneBase then
 	SceneMgr._SceneBase = {}
 end

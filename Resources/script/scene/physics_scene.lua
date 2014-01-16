@@ -7,6 +7,10 @@
 
 local Scene = SceneMgr:GetClass("PhysicsScene", 1)
 
+function Scene:_Uninit()
+    CCDirector:getInstance():getScheduler():unscheduleScriptEntry(self.nRegPhysicsUpdate)
+end
+
 function Scene:Create()
 	local sceneGame = self:GetCCObj()
 	if not sceneGame then

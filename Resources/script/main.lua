@@ -65,10 +65,10 @@ local function main()
 	sceneMain:addChild(layerBG, Def.ZOOM_LEVEL_WORLD)
 
 	local layerMainMenu = MenuMgr:CreateMenu("MainMenu")
-	layerMainMenu:setPosition(40, tbVisibleSize.height - 80)
+	layerMainMenu:setPosition(20, tbVisibleSize.height - 80)
     sceneMain:addChild(layerMainMenu, Def.ZOOM_LEVEL_MENU)
     local tbElement = {
-    	[1] = {
+    	{
 	    	[1] = {
 	        	szItemName = "运行Demo",
 	        	fnCallBack = function()
@@ -76,7 +76,7 @@ local function main()
 	        	end,
 	        },
 	    },
-	    [2] = {
+	    {
 	        [1] = {
 	        	szItemName = "弹坑测试",
 	        	fnCallBack = function()
@@ -84,7 +84,7 @@ local function main()
 	        	end,
 	        },
 	    },	    
-	    [3] = {
+	    {
 	    	[1] = {
 	        	szItemName = "物理引擎测试",
 	        	fnCallBack = function()
@@ -92,7 +92,7 @@ local function main()
 	        	end,
 	        },
 	    },
-	    [4] = {
+	    {
 	    	[1] = {
 	        	szItemName = "cocoStudio测试用",
 	        	fnCallBack = function()
@@ -100,7 +100,15 @@ local function main()
 	        	end,
 	        },
 		},
-		[5] = {
+		{
+	    	[1] = {
+	        	szItemName = "多边形破坏测试",
+	        	fnCallBack = function()
+	        		GameMgr:StartPhysicsScene("PolygonBreak", 10)
+	        	end,
+	        },
+		},
+		{
 	    	[1] = {
 	        	szItemName = "机械构建测试",
 	        	fnCallBack = function()
@@ -108,7 +116,7 @@ local function main()
 	        	end,
 	        },
 		},
-		[6] = {
+		{
 	    	[1] = {
 	        	szItemName = "详细爆炸受力分析测试",
 	        	fnCallBack = function()
@@ -116,7 +124,7 @@ local function main()
 	        	end,
 	        },
 		},
-		[7] = {
+		{
 	    	[1] = {
 	        	szItemName = "AI测试",
 	        	fnCallBack = function()
@@ -124,7 +132,7 @@ local function main()
 	        	end,
 	        },
 		},
-		[8] = {
+		{
 	    	[1] = {
 	        	szItemName = "联机测试",
 	        	fnCallBack = function()

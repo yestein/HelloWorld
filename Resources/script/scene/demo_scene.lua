@@ -12,7 +12,8 @@ function Scene:_Uninit()
 	BattleLogic:Uninit()
 	Event:UnRegistEvent("WeaponRotate", self.nRegWeaponRotate)
 	Event:UnRegistEvent("PowerChanged", self.nRegPowerChanged)	
-	Event:UnRegistEvent("Attack", self.nRegAttack)	
+	Event:UnRegistEvent("Attack", self.nRegAttack)
+	CCDirector:getInstance():getScheduler():unscheduleScriptEntry(self.nRegPhysicsUpdate)
 end
 
 function Scene:Create()
@@ -197,7 +198,6 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 	    cc_sprite_weapon:setRotation(-45)
 	    cc_sprite_weapon:setTag(110)
 	    physics_sprite_body:addChild(cc_sprite_weapon)
-	    tb_ret.weapon = cc_sprite_weapon
 
 	    -- local weapon_x = tank_x
 	    -- local weapon_y = tank_y
@@ -217,7 +217,7 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 		   --  physics_sprite_body, -30, 10,
 		   --  physics_sprite_weapon, -width_weapon * 0.5 + 5, 0,
 		   --  bool_enable_limit, min_angel, max_angel, motor_speed, motor_torque)
-		--tb_ret.weapon = physics_sprite_weapon
+		tb_ret.weapon = cc_sprite_weapon
 	end
 
     return tb_ret
@@ -240,7 +240,7 @@ function Scene:LoadControlUI()
 	end
 	local tb_button_list = {"button_left", "button_right", "button_up", "button_down", "button_luanch"}
 	for _, str_button_name in ipairs(tb_button_list) do
-		local button = uilayer_control:getChildByName(str_button_name)
+		local button = uilayer_control:getWidgetByName(str_button_name)
 		if button then
 			button:addTouchEventListener(OnButtonEvent)
 		else
@@ -251,42 +251,42 @@ function Scene:LoadControlUI()
 end
 
 function Scene:OnWeaponRotate(rotation)
-	local label_angel = self.uilayer_control:getChildByName("label_angel")
+	local label_angel = self.uilayer_control:getWidgetByName("label_angel")
 	if not label_angel then
 		assert(false)
 		return
 	end	
-	label_angel = tolua.cast(label_angel, "TextAtlas")
-	label_angel:setStringValue(-rotation)
+	label_angel = tolua.cast(label_angel, "UILabelAtlas")
+	label_angel:setStringValue(tostring(-rotation))
 end
 
 function Scene:OnPowerChanged(power)
-	local progressbar_power = self.uilayer_control:getChildByName("progressbar_power")
+	local progressbar_power = self.uilayer_control:getWidgetByName("progressbar_power")
 	if not progressbar_power then
 		assert(false)
 		return
 	end	
-	local label_power = progressbar_power:getChildByName("label_power")
+	local label_power = self.uilayer_control:getWidgetByName("label_power")
 	if not label_power then
 		assert(false)
 		return
 	end	
-	progressbar_power = tolua.cast(progressbar_power, "LoadingBar")
+	progressbar_power = tolua.cast(progressbar_power, "UILoadingBar")
 	progressbar_power:setVisible(true)
 	progressbar_power:setPercent(power)
 
-	label_power = tolua.cast(label_power, "TextAtlas")
+	label_power = tolua.cast(label_power, "UILabelAtlas")
 	label_power:setVisible(true)
 	label_power:setStringValue(power)
 end
 
 function Scene:OnAttack(power)
-	local progressbar_power = self.uilayer_control:getChildByName("progressbar_power")
+	local progressbar_power = self.uilayer_control:getWidgetByName("progressbar_power")
 	if not progressbar_power then
 		assert(false)
 		return
 	end	
-	local label_power = progressbar_power:getChildByName("label_power")
+	local label_power = self.uilayer_control:getWidgetByName("label_power")
 	if not label_power then
 		assert(false)
 		return
@@ -297,7 +297,7 @@ function Scene:OnAttack(power)
     local physics_sprite_bullet = BombSprite:create("image/bullet.png")
     local float_scale = 1
     local float_bullet_radius = physics_sprite_bullet:getContentSize().width * 0.25 * float_scale
-    physics_sprite_bullet:Init(150, 60, 80)
+    physics_sprite_bullet:Init(250, 500, 80)
 
     local weapon = self.tb_player.weapon
     local body = self.tb_player.body

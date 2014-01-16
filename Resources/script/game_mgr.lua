@@ -6,7 +6,6 @@
 -- Modify       :
 --=======================================================================
 
-
 if not GameMgr then
 	GameMgr = {}
 end
@@ -39,7 +38,7 @@ function GameMgr:StartNormalScene(szSceneName)
 	CCDirector:getInstance():pushScene(scene)
 end
 
-function GameMgr:StartPhysicsScene(szSceneName)
+function GameMgr:StartPhysicsScene(szSceneName, z_level_debug_layer)
     local tbScene = SceneMgr:GetScene(szSceneName)
     local scene = nil
     if not tbScene then
@@ -52,7 +51,11 @@ function GameMgr:StartPhysicsScene(szSceneName)
 	    self.layerWorld = layerWorld
 	    if _DEBUG then
 	        local layerDebugPhysics = DebugPhysicsLayer:create()
-	        layerWorld:addChild(layerDebugPhysics)
+	        if z_level_debug_layer then
+	        	layerWorld:addChild(layerDebugPhysics, z_level_debug_layer)
+	        else
+	        	layerWorld:addChild(layerDebugPhysics)
+	        end
 	    end
 	    self:AddReturnMenu(scene, szSceneName)
 	end
@@ -68,8 +71,8 @@ function GameMgr:AddReturnMenu(scene, szSceneName)
     local tbElement = {
 	    [1] = {
 	        [1] = {
-				szNormal   = "ui/icon.png",
-				szSelected = "ui/icon.png",
+				szNormal   = "ui/Icon.png",
+				szSelected = "ui/Icon.png",
 	        	fnCallBack = function()
 	        		SceneMgr:DestroyScene(szSceneName)
 	        		CCDirector:getInstance():popScene()
@@ -96,7 +99,7 @@ function GameMgr:TestCocoStudio()
 	end
 	local tb_button_list = {"button_left", "button_right", "button_up", "button_down", "button_luanch"}
 	for _, str_button_name in ipairs(tb_button_list) do
-		local button = uilayer_control:getChildByName(str_button_name)
+		local button = uilayer_control:getWidgetByName(str_button_name)
 		if button then
 			button:addTouchEventListener(OnButtonEvent)
 		else
