@@ -5,7 +5,6 @@
 #include "bomb_sprite.h"
 #include "physics_bomb.h"
 #include "b2Separator.h"
-#include "clipper.hpp"
 
 GamePhysicsWorld* GamePhysicsWorld::ms_ptr_instance = NULL;
 USING_NS_CC;
@@ -134,7 +133,7 @@ BOOL GamePhysicsWorld::Update(float float_delta)
             ptr_sprite_element->setRotation( -1* CC_RADIANS_TO_DEGREES(b2body_it->GetAngle()));
         } 
     }
-    num_ret_code = ProcessCollide();
+    num_ret_code = processCollide();
     KGLOG_PROCESS_ERROR(num_ret_code);
 
 	num_result = TRUE;
@@ -142,7 +141,7 @@ Exit0:
 	return num_result;
 }
 
-BOOL GamePhysicsWorld::ProcessCollide()
+BOOL GamePhysicsWorld::processCollide()
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
@@ -355,107 +354,6 @@ Exit0:
 
 //////////////////////////////////////////////////////////////////////////
 // ·â×°API
-
-BOOL GamePhysicsWorld::TestPolygon( float float_x, float float_y )
-{
-	int num_result = FALSE;
-	int num_ret_code = FALSE;
-
-    // Make a small box.
-    b2AABB b2aabb;
-    b2Vec2 b2vec_radius;
-    b2Vec2 b2vec_pos;
-    b2Body* b2body_click_body = NULL;
-    b2PolygonShape* shape = NULL;
-    b2vec_radius.Set(0.001f, 0.001f);
-    float body_x = 0.0f;
-    float body_y = 0.0f;
-    b2aabb.lowerBound = m_b2vec_mouse_position - b2vec_radius;
-    b2aabb.upperBound = m_b2vec_mouse_position + b2vec_radius;
-
-    // Query the world for overlapping shapes.
-    MouseQueryCallback callback(m_b2vec_mouse_position);
-    m_ptr_b2world->QueryAABB(&callback, b2aabb);
-    KG_PROCESS_ERROR(callback.m_fixture);
-
-    b2body_click_body = callback.m_fixture->GetBody();
-    KGLOG_PROCESS_ERROR(b2body_click_body);
-
-    b2vec_pos = b2body_click_body->GetPosition();
-
-    {
-        int precision = 20;
-        float angle = 2 * 3.14 / precision;
-        float radius = 100.0f;
-
-        Paths subj(2), clip(1), solution;
-
-        shape = (b2PolygonShape*)callback.m_fixture->GetShape();
-        for (int i = 0;i < shape->m_vertexCount; i++)
-        {
-            printf("%.1f, %.1f\n", shape->m_vertices[i].x, shape->m_vertices[i].y);
-            subj[0].push_back(IntPoint(shape->m_vertices[i].x * PTM_RATIO, shape->m_vertices[i].y * PTM_RATIO));
-        }
-
-//         //define outer blue 'subject' polygon
-//         subj[0].push_back(IntPoint(-100,-100));
-//         subj[0].push_back(IntPoint(100,-100));
-//         subj[0].push_back(IntPoint(100,100));
-//         subj[0].push_back(IntPoint(-100,100));
-// 
-//         //define subject's inner triangular 'hole' (with reverse orientation)
-//         subj[1].push_back(IntPoint(200,190));
-//         subj[1].push_back(IntPoint(230,190));
-//         subj[1].push_back(IntPoint(215,160));
-//         
-
-        for (int i = 0; i < precision; i++) {
-            printf("%.1f, %.1f\n", float_x + radius * cos(angle * i), float_y + radius * sin(angle * i));
-            clip[0].push_back(IntPoint(float_x + radius * cos(angle * i) - b2vec_pos.x * PTM_RATIO, float_y + radius * sin(angle * i)  - b2vec_pos.y * PTM_RATIO));
-        }
-
-//         //define orange 'clipping' polygon
-//         clip[0].push_back(IntPoint(190,130));
-//         clip[0].push_back(IntPoint(240,130));
-//         clip[0].push_back(IntPoint(240,210));
-//         clip[0].push_back(IntPoint(190,210)); 
-
-        //perform intersection ...
-        Clipper c;
-        c.AddPaths(subj, ptSubject, true);
-        c.AddPaths(clip, ptClip, true);
-        c.Execute(ctDifference, solution, pftNonZero, pftNonZero);
-
-        b2Body *body; 
-        b2BodyDef bodyDef;
-        b2Separator sep;
-//         bodyDef.type = b2_dynamicBody;
-        bodyDef.position = b2vec_pos;
-        body = m_ptr_b2world->CreateBody(&bodyDef);
-        Paths::iterator it = solution.begin();
-        for(NULL; it != solution.end(); ++it)
-        {
-            Path::iterator vecIt = it->begin();
-
-
-            b2FixtureDef fixtureDef;
-            fixtureDef.restitution = 0.4f;
-            fixtureDef.friction = 0.2f;
-            fixtureDef.density = 4.0f;
-            vector<b2Vec2> vec;
-            for(NULL; vecIt != it->end(); ++vecIt)
-            {
-                vec.push_back(b2Vec2(float(vecIt->X) / PTM_RATIO, float(vecIt->Y) / PTM_RATIO));
-            }
-            num_ret_code = sep.Validate(vec);
-            sep.Separate(body, &fixtureDef, &vec, PTM_RATIO);
-        }
-    }
-
-	num_result = TRUE;
-Exit0:
-	return num_result;
-}
 
 BOOL GamePhysicsWorld::CreateRectEdge(
     float float_left,
@@ -1133,12 +1031,181 @@ Exit0:
 	return num_result;
 }
 
-BOOL GamePhysicsWorld::ClipperPolygon(GameSprite* sprite, const char* str_clipper)
+BOOL GamePhysicsWorld::ClipperPolygon(
+    GameSprite* ptr_gamesprite,
+    const std::string &shape_name,
+    float float_position_x,
+    float float_position_y
+)
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
 
-	
+
+    b2Body* ptr_b2body_old = NULL;
+    b2Fixture* ptr_b2fixture = NULL;
+    b2Body* ptr_b2body_new = NULL;
+    b2BodyDef bodyDef;
+    b2Separator b2separator;
+    ClipperLib::Paths clipper_paths_clipper(1);
+    float float_offset_x = 0.0f;
+    float float_offset_y = 0.0f;
+
+//     vector<b2Vec2> test;
+//     test.push_back(b2Vec2(-3, 3));
+//     test.push_back(b2Vec2(0, 3));
+//     test.push_back(b2Vec2(0, 1));
+//     test.push_back(b2Vec2(1, 0));
+//     test.push_back(b2Vec2(0, -1));
+//     test.push_back(b2Vec2(0, -3));
+//     test.push_back(b2Vec2(-3, -3));
+//     num_ret_code = b2separator.Validate(test);
+
+    KGLOG_PROCESS_ERROR(ptr_gamesprite);
+    ptr_b2body_old = ptr_gamesprite->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body_old);
+
+    bodyDef.position = ptr_b2body_old->GetPosition();
+    float_offset_x = float_position_x - bodyDef.position.x * PTM_RATIO;
+    float_offset_y = float_position_y - bodyDef.position.y * PTM_RATIO;
+    ptr_b2body_new = m_ptr_b2world->CreateBody(&bodyDef);
+
+    ptr_b2fixture = ptr_b2body_old->GetFixtureList();
+    KGLOG_PROCESS_ERROR(ptr_b2fixture);    
+
+    num_ret_code = getPolygonFromCache(shape_name, &clipper_paths_clipper, float_offset_x, float_offset_y);
+    KGLOG_PROCESS_ERROR(num_ret_code);
+
+    while (ptr_b2fixture)
+    {
+        ClipperLib::Paths clipper_paths_main(1);
+        
+        ClipperLib::Paths clipper_paths_result;
+        ClipperLib::Clipper clipper;
+
+        num_ret_code = getPolygonFormBody(ptr_b2fixture, &clipper_paths_main);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.AddPaths(clipper_paths_main, ptSubject, true);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.AddPaths(clipper_paths_clipper, ptClip, true);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.Execute(ClipperLib::ctDifference, clipper_paths_result, pftNonZero, pftNonZero);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        Paths::iterator it_group = clipper_paths_result.begin();
+        for(NULL; it_group != clipper_paths_result.end(); ++it_group)
+        {
+            Path::iterator it = it_group->begin();
+            vector<b2Vec2> vec_vertices;
+
+            b2FixtureDef b2fixturedef_new;
+            b2fixturedef_new.restitution = ptr_b2fixture->GetRestitution();
+            b2fixturedef_new.friction = ptr_b2fixture->GetFriction();
+            b2fixturedef_new.density = ptr_b2fixture->GetDensity();
+
+            for(NULL; it != it_group->end(); ++it)
+            {
+                vec_vertices.push_back(b2Vec2(float(it->X) / 1000, float(it->Y) / 1000));
+            }
+            num_ret_code = b2separator.Validate(vec_vertices);
+            if (num_ret_code >= 0)
+            {
+                b2separator.Separate(ptr_b2body_new, &b2fixturedef_new, &vec_vertices, PTM_RATIO);
+            }
+            else
+            {
+
+            }
+        }
+        ptr_b2fixture = ptr_b2fixture->GetNext();
+    }
+
+    num_ret_code = ptr_gamesprite->SetB2Body(ptr_b2body_new);
+    KGLOG_PROCESS_ERROR(num_ret_code);
+
+    m_ptr_b2world->DestroyBody(ptr_b2body_old);
+    ptr_b2body_old = NULL;
+
+	num_result = TRUE;
+Exit0:
+    if (!num_result)
+    {
+        if(ptr_b2body_new)
+        {
+            m_ptr_b2world->DestroyBody(ptr_b2body_new);
+            ptr_b2body_new = NULL;
+        }
+    }
+	return num_result;
+}
+
+BOOL GamePhysicsWorld::getPolygonFormBody(b2Fixture* ptr_b2fixture, ClipperLib::Paths* ptr_clipper_paths)
+{
+	int num_result = FALSE;
+	int num_ret_code = FALSE;
+
+    b2PolygonShape* ptr_b2shape_polygon = NULL;
+
+    KGLOG_PROCESS_ERROR(ptr_b2fixture);
+    KGLOG_PROCESS_ERROR(ptr_b2fixture->GetType() == b2Shape::e_polygon);
+
+    ptr_b2shape_polygon = (b2PolygonShape*)ptr_b2fixture->GetShape();
+    KGLOG_PROCESS_ERROR(ptr_b2shape_polygon);
+
+    for (int i = 0;i < ptr_b2shape_polygon->m_vertexCount; i++)
+    {
+        int integer_vertice_x = ptr_b2shape_polygon->m_vertices[i].x * PTM_RATIO * 1000;
+        int integer_vertice_y = ptr_b2shape_polygon->m_vertices[i].y * PTM_RATIO * 1000;
+        (*ptr_clipper_paths)[0].push_back(IntPoint(integer_vertice_x, integer_vertice_y));
+    }	
+
+	num_result = TRUE;
+Exit0:
+	return num_result;
+}
+
+BOOL GamePhysicsWorld::getPolygonFromCache(const std::string &shape_name, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y)
+{
+	int num_result = FALSE;
+	int num_ret_code = FALSE;
+//     GB2FixtureDef* ptr_gb2_fixture_def = NULL;
+//     GB2ShapeCache* ptr_gb2_shape_cache = GB2ShapeCache::sharedGB2ShapeCache();
+// 
+//     KGLOG_PROCESS_ERROR(ptr_gb2_shape_cache);
+// 
+//     ptr_gb2_fixture_def = ptr_gb2_shape_cache->GetFixtures(shape_name);
+//     KGLOG_PROCESS_ERROR(ptr_gb2_fixture_def);
+// 
+//     while (ptr_gb2_fixture_def)
+//     {
+//         b2FixtureDef* ptr_b2fixture_def = &ptr_gb2_fixture_def->fixture;
+//         KGLOG_PROCESS_ERROR(ptr_b2fixture_def);
+// 
+//         const b2Shape* ptr_b2shape = ptr_b2fixture_def->shape;
+//         KGLOG_PROCESS_ERROR(ptr_b2shape->GetType() == b2Shape::e_polygon);
+// 
+//         const b2PolygonShape* ptr_b2polygonshape = (const b2PolygonShape*)ptr_b2shape;
+// 
+//         for (int i = 0;i < ptr_b2polygonshape->m_vertexCount; i++)
+//         {
+//             int integer_vertice_x = ptr_b2polygonshape->m_vertices[i].x * PTM_RATIO;
+//             int integer_vertice_y = ptr_b2polygonshape->m_vertices[i].y * PTM_RATIO;
+//             (*ptr_clipper_paths)[0].push_back(IntPoint((integer_vertice_x + float_offset_x) * 1000, (integer_vertice_y + float_offset_y) * 1000));
+//         }
+//         ptr_gb2_fixture_def = ptr_gb2_fixture_def->next;
+//     }
+    float radius = 100.0f;
+    int precision = 20;
+    float angle = 2 * 3.14 / precision;
+    for (int i = 0; i < precision; i++) 
+    {
+        int integer_vertice_x = (float_offset_x + radius * cos(angle * i)) * 1000;
+        int integer_vertice_y = (float_offset_y + radius * sin(angle * i)) * 1000;
+        (*ptr_clipper_paths)[0].push_back(IntPoint(integer_vertice_x, integer_vertice_y));
+    }
 
 	num_result = TRUE;
 Exit0:

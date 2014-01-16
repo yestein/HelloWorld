@@ -37,11 +37,37 @@
 #define GB2_SHAPE_CACHE_X_H
 
 #include "cocos2d.h"
+#include "Box2D/Box2D.h"
 
-class BodyDef;
 class b2Body;
+struct b2FixtureDef;
+
+class GB2FixtureDef {
+public:
+    GB2FixtureDef()
+        : next(NULL) {}
+
+    ~GB2FixtureDef();
+    GB2FixtureDef *next;
+    b2FixtureDef fixture;
+    int callbackData;
+};
+
+class GB2BodyDef {
+public:
+    GB2BodyDef()
+        : fixtures(NULL) {}
+
+    ~GB2BodyDef();
+    GB2FixtureDef *fixtures;
+    cocos2d::Point anchorPoint;
+};
 
 namespace cocos2d {
+    /**
+     * Internal class to hold the fixtures
+     */
+
 	class GB2ShapeCache {
 	public:
 		// Static interface
@@ -51,13 +77,14 @@ namespace cocos2d {
 		bool init();			
 		void addShapesWithFile(const std::string &plist);
 		void addFixturesToBody(b2Body *body, const std::string &shape);
+        GB2FixtureDef* GetFixtures(const std::string &shape);
 		cocos2d::Point anchorPointForShape(const std::string &shape);
 		void reset();
 		float getPtmRatio() { return ptmRatio; }
 		~GB2ShapeCache() {}
 		
 	private:
-		std::map<std::string, BodyDef *> shapeObjects;
+		std::map<std::string, GB2BodyDef *> shapeObjects;
 		GB2ShapeCache(void) {}
 		float ptmRatio;
 	};

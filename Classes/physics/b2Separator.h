@@ -14,7 +14,6 @@
 #include <queue>
 #include <algorithm>
 
-
 /*
  * Convex Separator for Box2D Flash
  *
@@ -26,6 +25,28 @@
  * 2. You can not remove or alter this notice.
  *
  */
+#ifndef NULL
+#define NULL 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+#define LOG_PROCESS_ERROR(Condition) \
+    do  \
+{   \
+    if (!(Condition))       \
+{                       \
+    printf(        \
+    "ERROR(%s) at line %d in %s\n", #Condition, __LINE__, __FUNCTION__  \
+    );                  \
+    goto Exit0;         \
+}                       \
+} while (false)
+
 
 class b2Separator {
     
@@ -52,7 +73,7 @@ public:
 		 * @see b2Fixture
 		 **/
         
-    void Separate(b2Body* pBody, b2FixtureDef* pFixtureDef, vector<b2Vec2>* pVerticesVec, int scale);
+    int Separate(b2Body* pBody, b2FixtureDef* pFixtureDef,const vector<b2Vec2>* const_ptr_vetor_vertices, int scale);
 		/**
 		 * Checks whether the vertices in <code>verticesVec</code> can be properly distributed into the new fixtures (more specifically, it makes sure there are no overlapping segments and the vertices are in clockwise order).
 		 * It is recommended that you use this method for debugging only, because it may cost more CPU usage.
@@ -72,13 +93,17 @@ public:
     
 private:
     
-    void calcShapes(vector<b2Vec2> &pVerticesVec, vector<vector<b2Vec2> > &result);
+    int calcShapes(const vector<b2Vec2>* const_ptr_vetor_vertices, vector<vector<b2Vec2> > &result);
 	b2Vec2* hitRay(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
 	b2Vec2* hitSegment(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+
 	bool isOnSegment(float px, float py, float x1, float y1, float x2, float y2);
     bool pointsMatch(float x1, float y1, float x2,float y2);
     bool isOnLine(float px, float py, float x1, float y1, float x2, float y2);
-    float det( float x1, float y1, float x2, float y2, float x3, float y3);
+    float det(float x1, float y1, float x2, float y2, float x3, float y3);
+
+    b2Vec2* hitSegment(b2Vec2 &vec1, b2Vec2 &vec2);
+    float det(b2Vec2 &vec1, b2Vec2 &vec2);
 };
 
 #endif /* defined(__Thermite__b2Separator__) */

@@ -7,6 +7,7 @@
 #include "Base.h"
 #include "cocos2d.h"
 #include "Box2D/Box2D.h"
+#include "clipper.hpp"
 USING_NS_CC;
 
 #define PTM_RATIO 32
@@ -84,11 +85,6 @@ public:
         float float_buttom,
         float float_top
     );
-
-    BOOL TestPolygon(
-        float float_x,
-        float float_y
-        );
 
     BOOL SetBoxBody(
         GameSprite* ptr_sprite, 
@@ -248,15 +244,18 @@ public:
     void MouseUp(float float_x, float float_y);
     BOOL MouseMove(float float_x, float float_y);
 
-    BOOL ClipperPolygon(GameSprite* sprite, const char* str_clipper);
+    BOOL ClipperPolygon(GameSprite* sprite, const std::string &shape_name, float float_offset_x, float float_offset_y);
+    
 
     b2World* GetWorld(){ return m_ptr_b2world;}
 
 private:
 
-    BOOL ProcessCollide();
+    BOOL processCollide();
     int addJoint(b2Joint* ptr_joint);
     b2Joint* getJoint(int joint_id);
+    BOOL getPolygonFormBody(b2Fixture* ptr_b2fixture, ClipperLib::Paths* ptr_clipper_paths);
+    BOOL getPolygonFromCache(const std::string &shape_name, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y);
 private:
 	static GamePhysicsWorld* ms_ptr_instance;
     CollideVector m_array_collide;

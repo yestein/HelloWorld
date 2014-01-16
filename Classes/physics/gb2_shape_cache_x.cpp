@@ -34,44 +34,21 @@
 //
 
 #include "gb2_shape_cache_x.h"
-#include "Box2D/Box2D.h"
 #include "CCNS.h"
 
 using namespace cocos2d;
 
-/**
- * Internal class to hold the fixtures
- */
-class FixtureDef {
-public:
-    FixtureDef()
-    : next(NULL) {}
-    
-    ~FixtureDef() {
-        delete next;
-        delete fixture.shape;
-    }
-    
-    FixtureDef *next;
-    b2FixtureDef fixture;
-    int callbackData;
-};
-
-class BodyDef {
-public:
-	BodyDef()
-	: fixtures(NULL) {}
-	
-	~BodyDef() {
-		if (fixtures)
-			delete fixtures;
-	}
-	
-	FixtureDef *fixtures;
-	Point anchorPoint;
-};
-
 static GB2ShapeCache *_sharedGB2ShapeCache = NULL;
+
+GB2FixtureDef::~GB2FixtureDef() {
+    delete next;
+    delete fixture.shape;
+}
+
+GB2BodyDef::~GB2BodyDef() {
+    if (fixtures)
+        delete fixtures;
+}
 
 GB2ShapeCache* GB2ShapeCache::sharedGB2ShapeCache(void) {
 	if (!_sharedGB2ShapeCache) {
@@ -87,7 +64,7 @@ bool GB2ShapeCache::init() {
 }
 
 void GB2ShapeCache::reset() {
-	std::map<std::string, BodyDef *>::iterator iter;
+	std::map<std::string, GB2BodyDef *>::iterator iter;
 	for (iter = shapeObjects.begin() ; iter != shapeObjects.end() ; ++iter) {
 		delete iter->second;
 	}
@@ -95,23 +72,36 @@ void GB2ShapeCache::reset() {
 }
 
 void GB2ShapeCache::addFixturesToBody(b2Body *body, const std::string &shape) {
-	std::map<std::string, BodyDef *>::iterator pos = shapeObjects.find(shape);
+	std::map<std::string, GB2BodyDef *>::iterator pos = shapeObjects.find(shape);
 	assert(pos != shapeObjects.end());
 	
-	BodyDef *so = (*pos).second;
+	GB2BodyDef *so = (*pos).second;
 
-	FixtureDef *fix = so->fixtures;
+	GB2FixtureDef *fix = so->fixtures;
     while (fix) {
         body->CreateFixture(&fix->fixture);
         fix = fix->next;
     }
 }
 
+GB2FixtureDef* GB2ShapeCache::GetFixtures(const std::string &shape)
+{
+    GB2FixtureDef* ptr_ret_fixturedef = NULL;
+    GB2BodyDef *ptr_body_def = NULL;
+    std::map<std::string, GB2BodyDef *>::iterator pos = shapeObjects.find(shape);
+    assert(pos != shapeObjects.end());
+    ptr_body_def = pos->second;
+
+    ptr_ret_fixturedef = ptr_body_def->fixtures;
+    assert(ptr_ret_fixturedef);
+    return ptr_ret_fixturedef;
+}
+
 cocos2d::CCPoint GB2ShapeCache::anchorPointForShape(const std::string &shape) {
-	std::map<std::string, BodyDef *>::iterator pos = shapeObjects.find(shape);
+	std::map<std::string, GB2BodyDef *>::iterator pos = shapeObjects.find(shape);
 	assert(pos != shapeObjects.end());
 	
-	BodyDef *bd = (*pos).second;
+	GB2BodyDef *bd = (*pos).second;
 	return bd->anchorPoint;
 }
 
@@ -135,13 +125,13 @@ void GB2ShapeCache::addShapesWithFile(const std::string &plist) {
 	CCDICT_FOREACH(bodyDict, element)
 	{
 		bodyName = element->getStrKey();
-		BodyDef *bodyDef = new BodyDef();
+		GB2BodyDef *bodyDef = new GB2BodyDef();
 		Dictionary* bodyData = static_cast<Dictionary*>(element->getObject());
 		bodyDef->anchorPoint = PointFromString(bodyData->valueForKey("anchorpoint")->getCString());
 		
 		Array* fixtureList = static_cast<Array*>(bodyData->objectForKey("fixtures"));
 		
-        FixtureDef **nextFixtureDef = &(bodyDef->fixtures);
+        GB2FixtureDef **nextFixtureDef = &(bodyDef->fixtures);
 
 		Object* pObj = NULL;
 		CCARRAY_FOREACH(fixtureList, pObj)
@@ -172,7 +162,7 @@ void GB2ShapeCache::addShapesWithFile(const std::string &plist) {
 				Object* pPolygon = NULL;
 				CCARRAY_FOREACH(polygonsArray, pPolygon)
 				{
-                    FixtureDef *fix = new FixtureDef();
+                    GB2FixtureDef *fix = new GB2FixtureDef();
                     fix->fixture = basicData; // copy basic data
                     fix->callbackData = callbackData;
 					
@@ -201,7 +191,7 @@ void GB2ShapeCache::addShapesWithFile(const std::string &plist) {
 				}
 				
 			} else if (fixtureType->compare("CIRCLE") == 0) {
-				FixtureDef *fix = new FixtureDef();
+				GB2FixtureDef *fix = new GB2FixtureDef();
                 fix->fixture = basicData; // copy basic data
                 fix->callbackData = callbackData;
                 
