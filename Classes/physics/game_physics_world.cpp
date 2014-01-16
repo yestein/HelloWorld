@@ -4,9 +4,12 @@
 #include "game_sprite.h"
 #include "bomb_sprite.h"
 #include "physics_bomb.h"
+#include "b2Separator.h"
+#include "clipper.hpp"
 
 GamePhysicsWorld* GamePhysicsWorld::ms_ptr_instance = NULL;
 USING_NS_CC;
+using namespace ClipperLib;
 
 BOOL GamePhysicsWorld::Init(float float_gravity_x, float float_gravity_y, int num_max_joint)
 {
@@ -26,6 +29,7 @@ BOOL GamePhysicsWorld::Init(float float_gravity_x, float float_gravity_y, int nu
         KGLOG_PROCESS_ERROR(m_ptr_b2body_ground);
 
         m_ptr_b2joint_mouse = NULL;
+        m_ptr_bomb_callback = NULL;
         m_ptr_pool_joint = (JOINT_NODE*)malloc(sizeof(JOINT_NODE) * num_max_joint);
         KGLOG_PROCESS_ERROR(m_ptr_pool_joint);
         for(int i = 0; i < num_max_joint; i++)
@@ -159,10 +163,12 @@ BOOL GamePhysicsWorld::ProcessCollide()
                 float float_power_linear = ptr_bomb_sprite->GetLinearPower();
                 float float_power_angular = ptr_bomb_sprite->GetAngularPower();
                 float float_bomb_radius = ptr_bomb_sprite->GetBombRadius();
-
-                num_ret_code = Bomb(bomb_postion.x, bomb_postion.y, float_power_linear, float_power_angular, float_bomb_radius);
-                KGLOG_PROCESS_ERROR(num_ret_code);
-
+                // 这里利用爆炸半径来做一个爆炸物理效果开关
+                if (float_bomb_radius > 0.0f)
+                {
+                    num_ret_code = Bomb(bomb_postion.x, bomb_postion.y, float_power_linear, float_power_angular, float_bomb_radius);
+                    KGLOG_PROCESS_ERROR(num_ret_code);
+                }
                 ptr_sprite->OnBomb();
             }                   
         }
@@ -201,7 +207,6 @@ BOOL GamePhysicsWorld::Bomb(
         m_ptr_bomb_callback
     );
     m_ptr_b2world->QueryAABB(&bomb, aabb);
-    bomb.Process();
 
 	num_result = TRUE;
 Exit0:
@@ -351,6 +356,107 @@ Exit0:
 //////////////////////////////////////////////////////////////////////////
 // 封装API
 
+BOOL GamePhysicsWorld::TestPolygon( float float_x, float float_y )
+{
+	int num_result = FALSE;
+	int num_ret_code = FALSE;
+
+    // Make a small box.
+    b2AABB b2aabb;
+    b2Vec2 b2vec_radius;
+    b2Vec2 b2vec_pos;
+    b2Body* b2body_click_body = NULL;
+    b2PolygonShape* shape = NULL;
+    b2vec_radius.Set(0.001f, 0.001f);
+    float body_x = 0.0f;
+    float body_y = 0.0f;
+    b2aabb.lowerBound = m_b2vec_mouse_position - b2vec_radius;
+    b2aabb.upperBound = m_b2vec_mouse_position + b2vec_radius;
+
+    // Query the world for overlapping shapes.
+    MouseQueryCallback callback(m_b2vec_mouse_position);
+    m_ptr_b2world->QueryAABB(&callback, b2aabb);
+    KG_PROCESS_ERROR(callback.m_fixture);
+
+    b2body_click_body = callback.m_fixture->GetBody();
+    KGLOG_PROCESS_ERROR(b2body_click_body);
+
+    b2vec_pos = b2body_click_body->GetPosition();
+
+    {
+        int precision = 20;
+        float angle = 2 * 3.14 / precision;
+        float radius = 100.0f;
+
+        Paths subj(2), clip(1), solution;
+
+        shape = (b2PolygonShape*)callback.m_fixture->GetShape();
+        for (int i = 0;i < shape->m_vertexCount; i++)
+        {
+            printf("%.1f, %.1f\n", shape->m_vertices[i].x, shape->m_vertices[i].y);
+            subj[0].push_back(IntPoint(shape->m_vertices[i].x * PTM_RATIO, shape->m_vertices[i].y * PTM_RATIO));
+        }
+
+//         //define outer blue 'subject' polygon
+//         subj[0].push_back(IntPoint(-100,-100));
+//         subj[0].push_back(IntPoint(100,-100));
+//         subj[0].push_back(IntPoint(100,100));
+//         subj[0].push_back(IntPoint(-100,100));
+// 
+//         //define subject's inner triangular 'hole' (with reverse orientation)
+//         subj[1].push_back(IntPoint(200,190));
+//         subj[1].push_back(IntPoint(230,190));
+//         subj[1].push_back(IntPoint(215,160));
+//         
+
+        for (int i = 0; i < precision; i++) {
+            printf("%.1f, %.1f\n", float_x + radius * cos(angle * i), float_y + radius * sin(angle * i));
+            clip[0].push_back(IntPoint(float_x + radius * cos(angle * i) - b2vec_pos.x * PTM_RATIO, float_y + radius * sin(angle * i)  - b2vec_pos.y * PTM_RATIO));
+        }
+
+//         //define orange 'clipping' polygon
+//         clip[0].push_back(IntPoint(190,130));
+//         clip[0].push_back(IntPoint(240,130));
+//         clip[0].push_back(IntPoint(240,210));
+//         clip[0].push_back(IntPoint(190,210)); 
+
+        //perform intersection ...
+        Clipper c;
+        c.AddPaths(subj, ptSubject, true);
+        c.AddPaths(clip, ptClip, true);
+        c.Execute(ctDifference, solution, pftNonZero, pftNonZero);
+
+        b2Body *body; 
+        b2BodyDef bodyDef;
+        b2Separator sep;
+//         bodyDef.type = b2_dynamicBody;
+        bodyDef.position = b2vec_pos;
+        body = m_ptr_b2world->CreateBody(&bodyDef);
+        Paths::iterator it = solution.begin();
+        for(NULL; it != solution.end(); ++it)
+        {
+            Path::iterator vecIt = it->begin();
+
+
+            b2FixtureDef fixtureDef;
+            fixtureDef.restitution = 0.4f;
+            fixtureDef.friction = 0.2f;
+            fixtureDef.density = 4.0f;
+            vector<b2Vec2> vec;
+            for(NULL; vecIt != it->end(); ++vecIt)
+            {
+                vec.push_back(b2Vec2(float(vecIt->X) / PTM_RATIO, float(vecIt->Y) / PTM_RATIO));
+            }
+            num_ret_code = sep.Validate(vec);
+            sep.Separate(body, &fixtureDef, &vec, PTM_RATIO);
+        }
+    }
+
+	num_result = TRUE;
+Exit0:
+	return num_result;
+}
+
 BOOL GamePhysicsWorld::CreateRectEdge(
     float float_left,
     float float_right,
@@ -453,7 +559,7 @@ BOOL GamePhysicsWorld::SetCircleBody(
     b2CircleShape b2circleshape_circle;
     b2circleshape_circle.m_radius = float_radius /PTM_RATIO;
 
-    num_ret_code = SetShapeBody(ptr_sprite, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
+    num_ret_code = SetShapeBody(NULL, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
 	num_result = TRUE;
@@ -984,7 +1090,7 @@ BOOL GamePhysicsWorld::ApplyImpulse(GameSprite* sprite, float float_impulse_x, f
     ptr_b2body = sprite->GetB2Body();
     KGLOG_PROCESS_ERROR(ptr_b2body);
 
-    ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition(), true);
+    ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition());
 
 	num_result = TRUE;
 Exit0:
@@ -997,16 +1103,15 @@ BOOL GamePhysicsWorld::ApplyImpulseByAngular(GameSprite* sprite, float float_ang
     int num_ret_code = FALSE;
 
     b2Body* ptr_b2body = NULL;
-    
-    float float_impulse_x = float_strength * cos(CC_DEGREES_TO_RADIANS(float_angular));
-    float float_impulse_y = float_strength * sin(CC_DEGREES_TO_RADIANS(float_angular));
 
     KGLOG_PROCESS_ERROR(sprite);
 
     ptr_b2body = sprite->GetB2Body();
     KGLOG_PROCESS_ERROR(ptr_b2body);
 
-    ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition(), true);
+    float float_impulse_x = float_strength * cos(CC_DEGREES_TO_RADIANS(float_angular));
+    float float_impulse_y = float_strength * sin(CC_DEGREES_TO_RADIANS(float_angular));
+    ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition());
 
     num_result = TRUE;
 Exit0:
@@ -1022,6 +1127,18 @@ BOOL GamePhysicsWorld::SetupBombCallBack(BombCallback* ptr_callback)
 	KGLOG_PROCESS_ERROR(!m_ptr_bomb_callback);
 
     m_ptr_bomb_callback = ptr_callback;
+
+	num_result = TRUE;
+Exit0:
+	return num_result;
+}
+
+BOOL GamePhysicsWorld::ClipperPolygon(GameSprite* sprite, const char* str_clipper)
+{
+	int num_result = FALSE;
+	int num_ret_code = FALSE;
+
+	
 
 	num_result = TRUE;
 Exit0:

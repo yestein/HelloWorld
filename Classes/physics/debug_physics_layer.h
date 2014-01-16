@@ -7,7 +7,7 @@ USING_NS_CC;
 
 class DebugPhysicsLayer : public Layer {
 public:
-    DebugPhysicsLayer();
+    DebugPhysicsLayer(){};
     ~DebugPhysicsLayer() {
         SAFE_DELETE(m_ptr_gles_debug_draw);
     }

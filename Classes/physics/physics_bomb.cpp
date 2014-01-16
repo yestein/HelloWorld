@@ -23,42 +23,29 @@ bool PhysicsBomb::ReportFixture(b2Fixture* fixture)
     if (body->GetType() == b2_dynamicBody)
     {
         GameSprite* ptr_sprite = (GameSprite*)body->GetUserData();
-        if (!ptr_sprite->IsBomb())
+        if (ptr_sprite && !ptr_sprite->IsBomb())
         {
-            m_stl_set_process_list.insert(ptr_sprite);
+            b2Vec2 bomb_vec = body->GetPosition() - m_b2vec2_bomb_point;
+            float float_r2 = bomb_vec.LengthSquared();
+            float float_r = sqrt(float_r2);
+            float float_linear_impulse = m_float_power_linear / float_r2;
+            float float_impulse_x = float_linear_impulse * bomb_vec.x / float_r;
+            float float_impulse_y = float_linear_impulse * bomb_vec.y / float_r;
+            body->ApplyLinearImpulse(
+                b2Vec2(float_impulse_x, float_impulse_y),
+                body->GetPosition()
+            );
+            float float_angular_impulse = m_float_power_angular / float_r2;
+            if ((bomb_vec.x > 0.0f && bomb_vec.y > 0.0f) || (bomb_vec.x < 0.0f && bomb_vec.y < 0.0f))
+            {
+                float_angular_impulse *= -1;
+            }
+            body->ApplyAngularImpulse(float_angular_impulse);
+            if (m_ptr_bomb_callback)
+            {
+                m_ptr_bomb_callback->BeBombed(ptr_sprite);
+            }
         }        
     }
     return true;
-}
-
-BOOL PhysicsBomb::Process()
-{
-    SpriteList::iterator it = m_stl_set_process_list.begin();
-    for(NULL; it != m_stl_set_process_list.end(); ++it)
-    {
-        GameSprite* ptr_sprite = (*it);
-        b2Body* body = ptr_sprite->GetB2Body();
-        b2Vec2 bomb_vec = body->GetPosition() - m_b2vec2_bomb_point;
-        float float_r2 = bomb_vec.LengthSquared();
-        float float_r = sqrt(float_r2);
-        float float_linear_impulse = m_float_power_linear / float_r2;
-        float float_impulse_x = float_linear_impulse * bomb_vec.x / float_r;
-        float float_impulse_y = float_linear_impulse * bomb_vec.y / float_r;
-        body->ApplyLinearImpulse(
-            b2Vec2(float_impulse_x, float_impulse_y),
-            body->GetPosition(),
-            true
-            );
-        float float_angular_impulse = m_float_power_angular / float_r2;
-        if ((bomb_vec.x > 0.0f && bomb_vec.y > 0.0f) || (bomb_vec.x < 0.0f && bomb_vec.y < 0.0f))
-        {
-            float_angular_impulse *= -1;
-        }
-        body->ApplyAngularImpulse(float_angular_impulse, true);
-        if (m_ptr_bomb_callback)
-        {
-            m_ptr_bomb_callback->BeBombed(ptr_sprite);
-        }
-    }
-    return TRUE;
 }

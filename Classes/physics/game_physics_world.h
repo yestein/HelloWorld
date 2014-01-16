@@ -49,7 +49,7 @@ public:
 
     
 public:
-	GamePhysicsWorld():m_ptr_b2world(NULL), m_ptr_bomb_callback(NULL) {};
+	GamePhysicsWorld():m_ptr_b2world(NULL) {};
 	~GamePhysicsWorld(){};
 	static GamePhysicsWorld* GetInstance()
 	{
@@ -84,6 +84,11 @@ public:
         float float_buttom,
         float float_top
     );
+
+    BOOL TestPolygon(
+        float float_x,
+        float float_y
+        );
 
     BOOL SetBoxBody(
         GameSprite* ptr_sprite, 
@@ -242,6 +247,8 @@ public:
     BOOL MouseDown(float float_x, float float_y);
     void MouseUp(float float_x, float float_y);
     BOOL MouseMove(float float_x, float float_y);
+
+    BOOL ClipperPolygon(GameSprite* sprite, const char* str_clipper);
 
     b2World* GetWorld(){ return m_ptr_b2world;}
 
