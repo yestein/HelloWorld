@@ -1,6 +1,12 @@
 #include "debug_physics_layer.h" 
 #include "game_physics_world.h"
 
+DebugPhysicsLayer::DebugPhysicsLayer()
+    :m_ptr_gles_debug_draw(NULL)
+    ,m_ptr_b2World(NULL)
+{
+
+}
 bool DebugPhysicsLayer::init() 
 {
 	bool bool_result = false;
