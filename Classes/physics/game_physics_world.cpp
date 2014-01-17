@@ -4,7 +4,7 @@
 #include "game_sprite.h"
 #include "bomb_sprite.h"
 #include "physics_bomb.h"
-#include "b2Separator.h"
+#include "b2concave.h"
 
 GamePhysicsWorld* GamePhysicsWorld::ms_ptr_instance = NULL;
 USING_NS_CC;
@@ -457,7 +457,7 @@ BOOL GamePhysicsWorld::SetCircleBody(
     b2CircleShape b2circleshape_circle;
     b2circleshape_circle.m_radius = float_radius /PTM_RATIO;
 
-    num_ret_code = SetShapeBody(NULL, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
+    num_ret_code = SetShapeBody(ptr_sprite, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
 	num_result = TRUE;
@@ -1031,9 +1031,10 @@ Exit0:
 	return num_result;
 }
 
-BOOL GamePhysicsWorld::ClipperPolygon(
+BOOL GamePhysicsWorld::ClipperPolygonByCircle(
     GameSprite* ptr_gamesprite,
-    const std::string &shape_name,
+    float float_raius,
+    int int_precision,
     float float_position_x,
     float float_position_y
 )
@@ -1046,20 +1047,11 @@ BOOL GamePhysicsWorld::ClipperPolygon(
     b2Fixture* ptr_b2fixture = NULL;
     b2Body* ptr_b2body_new = NULL;
     b2BodyDef bodyDef;
-    b2Separator b2separator;
+    b2Concave b2concave;
     ClipperLib::Paths clipper_paths_clipper(1);
     float float_offset_x = 0.0f;
     float float_offset_y = 0.0f;
 
-//     vector<b2Vec2> test;
-//     test.push_back(b2Vec2(-3, 3));
-//     test.push_back(b2Vec2(0, 3));
-//     test.push_back(b2Vec2(0, 1));
-//     test.push_back(b2Vec2(1, 0));
-//     test.push_back(b2Vec2(0, -1));
-//     test.push_back(b2Vec2(0, -3));
-//     test.push_back(b2Vec2(-3, -3));
-//     num_ret_code = b2separator.Validate(test);
 
     KGLOG_PROCESS_ERROR(ptr_gamesprite);
     ptr_b2body_old = ptr_gamesprite->GetB2Body();
@@ -1068,12 +1060,14 @@ BOOL GamePhysicsWorld::ClipperPolygon(
     bodyDef.position = ptr_b2body_old->GetPosition();
     float_offset_x = float_position_x - bodyDef.position.x * PTM_RATIO;
     float_offset_y = float_position_y - bodyDef.position.y * PTM_RATIO;
+    bodyDef.type = ptr_b2body_old->GetType();
+    bodyDef.userData = ptr_b2body_old->GetUserData();
     ptr_b2body_new = m_ptr_b2world->CreateBody(&bodyDef);
 
     ptr_b2fixture = ptr_b2body_old->GetFixtureList();
     KGLOG_PROCESS_ERROR(ptr_b2fixture);    
 
-    num_ret_code = getPolygonFromCache(shape_name, &clipper_paths_clipper, float_offset_x, float_offset_y);
+    num_ret_code = getClipperCircle(float_raius, int_precision, &clipper_paths_clipper, float_offset_x, float_offset_y);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
     while (ptr_b2fixture)
@@ -1099,7 +1093,8 @@ BOOL GamePhysicsWorld::ClipperPolygon(
         for(NULL; it_group != clipper_paths_result.end(); ++it_group)
         {
             Path::iterator it = it_group->begin();
-            vector<b2Vec2> vec_vertices;
+            b2Vec2 vec_vertices[1000];
+            int count_vertices = 0;
 
             b2FixtureDef b2fixturedef_new;
             b2fixturedef_new.restitution = ptr_b2fixture->GetRestitution();
@@ -1108,17 +1103,10 @@ BOOL GamePhysicsWorld::ClipperPolygon(
 
             for(NULL; it != it_group->end(); ++it)
             {
-                vec_vertices.push_back(b2Vec2(float(it->X) / 1000, float(it->Y) / 1000));
+                vec_vertices[count_vertices++].Set(float(it->X) / (PTM_RATIO * CLIPPER_RATIO), float(it->Y) / (PTM_RATIO * CLIPPER_RATIO));
             }
-            num_ret_code = b2separator.Validate(vec_vertices);
-            if (num_ret_code >= 0)
-            {
-                b2separator.Separate(ptr_b2body_new, &b2fixturedef_new, &vec_vertices, PTM_RATIO);
-            }
-            else
-            {
-
-            }
+            num_ret_code = b2concave.Create(ptr_b2body_new, &b2fixturedef_new, vec_vertices, count_vertices);
+            KGLOG_PROCESS_ERROR(num_ret_code);
         }
         ptr_b2fixture = ptr_b2fixture->GetNext();
     }
@@ -1171,9 +1159,9 @@ BOOL GamePhysicsWorld::getPolygonFromCache(const std::string &shape_name, Clippe
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
-//     GB2FixtureDef* ptr_gb2_fixture_def = NULL;
-//     GB2ShapeCache* ptr_gb2_shape_cache = GB2ShapeCache::sharedGB2ShapeCache();
-// 
+    GB2FixtureDef* ptr_gb2_fixture_def = NULL;
+    GB2ShapeCache* ptr_gb2_shape_cache = GB2ShapeCache::sharedGB2ShapeCache();
+
 //     KGLOG_PROCESS_ERROR(ptr_gb2_shape_cache);
 // 
 //     ptr_gb2_fixture_def = ptr_gb2_shape_cache->GetFixtures(shape_name);
@@ -1197,13 +1185,21 @@ BOOL GamePhysicsWorld::getPolygonFromCache(const std::string &shape_name, Clippe
 //         }
 //         ptr_gb2_fixture_def = ptr_gb2_fixture_def->next;
 //     }
-    float radius = 100.0f;
-    int precision = 20;
-    float angle = 2 * 3.14 / precision;
-    for (int i = 0; i < precision; i++) 
+    num_result = TRUE;
+Exit0:
+	return num_result;
+}
+
+BOOL GamePhysicsWorld::getClipperCircle(float float_radius, int int_precision, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y)
+{
+	int num_result = FALSE;
+	int num_ret_code = FALSE;
+
+    float angle = 2 * 3.14 / int_precision;
+    for (int i = 0; i < int_precision; i++) 
     {
-        int integer_vertice_x = (float_offset_x + radius * cos(angle * i)) * 1000;
-        int integer_vertice_y = (float_offset_y + radius * sin(angle * i)) * 1000;
+        int integer_vertice_x = (float_offset_x + float_radius * cos(angle * i)) * CLIPPER_RATIO;
+        int integer_vertice_y = (float_offset_y + float_radius * sin(angle * i)) * CLIPPER_RATIO;
         (*ptr_clipper_paths)[0].push_back(IntPoint(integer_vertice_x, integer_vertice_y));
     }
 

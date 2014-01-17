@@ -11,6 +11,7 @@
 USING_NS_CC;
 
 #define PTM_RATIO 32
+#define CLIPPER_RATIO 1000
 #define MAX_JOINT_NUM 1000
 
 class GameSprite;
@@ -244,7 +245,13 @@ public:
     void MouseUp(float float_x, float float_y);
     BOOL MouseMove(float float_x, float float_y);
 
-    BOOL ClipperPolygon(GameSprite* sprite, const std::string &shape_name, float float_offset_x, float float_offset_y);
+    BOOL ClipperPolygonByCircle(
+        GameSprite* ptr_gamesprite,
+        float float_raius,
+        int int_precision,
+        float float_position_x,
+        float float_position_y
+    );
     
 
     b2World* GetWorld(){ return m_ptr_b2world;}
@@ -255,6 +262,7 @@ private:
     int addJoint(b2Joint* ptr_joint);
     b2Joint* getJoint(int joint_id);
     BOOL getPolygonFormBody(b2Fixture* ptr_b2fixture, ClipperLib::Paths* ptr_clipper_paths);
+    BOOL getClipperCircle(float float_radius, int int_precision, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y);
     BOOL getPolygonFromCache(const std::string &shape_name, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y);
 private:
 	static GamePhysicsWorld* ms_ptr_instance;
