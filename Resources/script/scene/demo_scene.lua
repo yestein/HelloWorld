@@ -6,174 +6,100 @@
 --===================================================
 
 local Scene = SceneMgr:GetClass("DemoScene", 1)
+Scene.can_touch = 1 --可接受触摸事件
+Scene.can_pick = 1 --可用鼠标拖拽物理刚体
+Scene.can_drag = 1 --可拖拽屏幕
+Scene.limit_drag = 1 --拖拽屏幕是否受限制（仅在场景范围内拖拽）
+
+Scene:DeclareListenEvent("Bomb", "OnBomb")
+Scene:DeclareListenEvent("WeaponRotate", "OnWeaponRotate")
+Scene:DeclareListenEvent("PowerChanged", "OnPowerChanged")
+Scene:DeclareListenEvent("Attack", "OnAttack")
+
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
 function Scene:_Uninit()
 	BattleLogic:Uninit()
-	Event:UnRegistEvent("WeaponRotate", self.nRegWeaponRotate)
-	Event:UnRegistEvent("PowerChanged", self.nRegPowerChanged)	
-	Event:UnRegistEvent("Attack", self.nRegAttack)
-	CCDirector:getInstance():getScheduler():unscheduleScriptEntry(self.nRegPhysicsUpdate)
 end
 
-function Scene:Create()
+function Scene:_Init()
 	local num_ret_code = 0
-	local tb_ui = self:GetUI()
-	if not tb_ui then
-		return
-	end
-	local cc_scene = self:GetCCObj()
-	if not cc_scene then
-		return
-	end
-
-	local cc_layer = cc.Layer:create()
-	self.cc_layer = cc_layer
-
 	local tb_size_visible = CCDirector:getInstance():getVisibleSize()
 	local width_visible = tb_size_visible.width
 	local height_visible = tb_size_visible.height
 
-    self:LoadControlUI()
-    local width_game = 0    
-    local height_game = 0
-    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map-box2d.plist") == 1)
-	for i = 1, 2 do
-        local physics_sprite_ground = GameSprite:create("image/map.png")
-    	local rect_map = physics_sprite_ground:getTextureRect()
+	local cc_layer_main = self:GetLayer("main")
+	self:LoadControlUI()
 
-        local position_x = rect_map.width * (i - 0.5) 
-        local position_y = rect_map.height / 2
-        width_game = width_game + rect_map.width
-        physics_sprite_ground:setPosition(position_x, position_y)
-    	cc_layer:addChild(physics_sprite_ground, Def.ZOOM_LEVEL_WORLD)
-
-    	local offset_x = 0
-    	local offset_y = 0
-    	local bool_dynamic = 0   
-        num_ret_code = PhysicsWorld:SetPolygonBodyWithShapeName(physics_sprite_ground, "map", offset_x, offset_y, bool_dynamic)
-       	assert(num_ret_code == 1)
-    end
-    local physics_sprite_background = cc.Sprite:create("image/background.png")
-    local rect_raw_background = physics_sprite_background:getTextureRect()
-    physics_sprite_background:setAnchorPoint(cc.p(0, 0))
-    cc_layer:addChild(physics_sprite_background)
-    local scale = width_game / rect_raw_background.width
-    height_game = rect_raw_background.height * scale
-    physics_sprite_background:setScale(scale)
-
-    num_ret_code = PhysicsWorld:CreateRectEdge(0, width_game, 0, height_game)
-    assert(num_ret_code == 1)    
+	self:CreateMap()
 
     local tb_param = {
     	str_body = "tank",
     	str_weapon = "tank_weapon",
 	}
-    self.tb_player = self:BuildTank(100, 200, tb_param)
-    self.tb_enemy = self:BuildTank(500, 200, tb_param)
+    self.tb_player = self:BuildTank(200, 425, tb_param)
+    self.tb_enemy = self:BuildTank(796, 409, tb_param)
 
     BattleLogic:Init(self.tb_player, self.tb_enemy)
+    return 1
+end
 
-	local touchBeginPoint = nil
-    local touchStartPoint = nil
-    local function onTouchBegan(x, y)
-        touchBeginPoint = {x = x, y = y}
-        touchStartPoint = {x = x, y = y}
-        local nX, nY = cc_layer:getPosition()
-        PhysicsWorld:MouseDown(x - nX,  y - nY)
-        return true
-    end
+function Scene:OnClick(x, y)
+	print(x, y)
+end
 
-    local function onTouchMoved(x, y)
-        if touchBeginPoint then
-            local nX, nY = cc_layer:getPosition()
-            if PhysicsWorld:MouseMove(x - nX,  y - nY) ~= 1 then
-                local nNewX, nNewY = nX + x - touchBeginPoint.x, nY + y - touchBeginPoint.y
-                local nMinX, nMaxX = width_visible - width_game, 0
-                local nMinY, nMaxY = height_visible - height_game,  0
-                if nNewX < nMinX then
-                    nNewX = nMinX
-                elseif nNewX > nMaxX then
-                    nNewX = nMaxX
-                end
+function Scene:CreateMap()
+	local cc_layer_main = self:GetLayer("main")
+	local width_scene = 0    
+    local height_scene = 0
 
-                if nNewY < nMinY then
-                    nNewY = nMinY
-                elseif nNewY > nMaxY then
-                    nNewY = nMaxY
-                end
-                cc_layer:setPosition(nNewX, nNewY)
+    local physics_sprite_ground = GameSprite:create(Def.str_ground_img)
+	local rect_map = physics_sprite_ground:getTextureRect()
+    local position_x = rect_map.width * 0.5
+    local position_y = rect_map.height * 0.5
+    physics_sprite_ground:setPosition(position_x, position_y)
+    self:SetGroundSprite(physics_sprite_ground)
+    local offset_x = 0
+	local offset_y = 0
+	local bool_dynamic = 0   
+    num_ret_code = PhysicsWorld:SetPolygonBodyWithShapeName(physics_sprite_ground, "map_ground", offset_x, offset_y, bool_dynamic)
+   	assert(num_ret_code == 1)
 
-                touchBeginPoint = {x = x, y = y}
-            end
-        end
-    end
-
-    local function onTouchEnded(x, y)
-         local nX, nY = cc_layer:getPosition()
-        PhysicsWorld:MouseUp(x - nX,  y - nY)
-        touchBeginPoint = nil
-    end
-
-    local function onTouch(eventType, x, y)
-        if eventType == "began" then   
-            return onTouchBegan(x, y)
-        elseif eventType == "moved" then
-            return onTouchMoved(x, y)
-        else
-            return onTouchEnded(x, y)
-        end
-    end
-
-    cc_layer:registerScriptTouchHandler(onTouch)
-    cc_layer:setTouchEnabled(true)
-    local function tick(delta)
-    	self:OnLoop(delta)
-    end
-    self.nRegPhysicsUpdate = CCDirector:getInstance():getScheduler():scheduleScriptFunc(tick, 0, false)
-
-    self.nRegWeaponRotate = Event:RegistEvent("WeaponRotate", self.OnWeaponRotate, self)
-    self.nRegPowerChanged = Event:RegistEvent("PowerChanged", self.OnPowerChanged, self)
-    self.nRegAttack = Event:RegistEvent("Attack", self.OnAttack, self)
+   	-- 用于蒙版遮罩
+    local cc_clipping_background = cc.ClippingNode:create(physics_sprite_ground)
+    cc_clipping_background:setAlphaThreshold(0.05)
+    cc_clipping_background:setInverted(false)    
     
-	Event:FireEvent("SceneCreate", self:GetClassName(), self:GetName())
-    return cc_layer
-end
+    local cc_clipping_map_ground = cc.ClippingNode:create(physics_sprite_ground)
+    cc_clipping_map_ground:setAlphaThreshold(0.05)
+    cc_clipping_map_ground:setInverted(true)    
 
-function Scene:OnLoop(delta)
-	PhysicsWorld:Update(delta)
-	BattleLogic:OnLoop(delta)
-end
+    local pHole = cc.Node:create()
+    cc_clipping_map_ground:setStencil(pHole)
+    self.pHole = pHole
 
-function Scene:CreatePloygonCommpent(str_name, x, y)
-	local physics_sprite = GameSprite:create(string.format("image/%s.png", str_name))
-    local width_commpent = physics_sprite:getContentSize().width
-    local height_commpent = physics_sprite:getContentSize().height
-    physics_sprite:setPosition(x, y)
+    local pEdge = cc.Node:create()
+    cc_clipping_map_ground:addChild(pEdge)
+    self.pEdge = pEdge    
 
-    local offset_x, offset_y, bool_dynamic = 0, 0, 1
-    PhysicsWorld:SetPolygonBodyWithShapeName(physics_sprite, str_name, offset_x, offset_y, bool_dynamic)
-    self.cc_layer:addChild(physics_sprite, Def.ZOOM_LEVEL_WORLD)
-    return physics_sprite, width_commpent, height_commpent
-end
+    cc_layer_main:addChild(cc_clipping_background, Def.ZOOM_LEVEL_WORLD)
+    cc_clipping_background:addChild(cc_clipping_map_ground)
+    cc_clipping_map_ground:addChild(physics_sprite_ground)
+	
+	local cc_sprite_background = cc.Sprite:create("image/background.png")
+    local rect_raw_background = cc_sprite_background:getTextureRect()
+    cc_sprite_background:setAnchorPoint(cc.p(0, 0))
+    
+    width_scene = rect_raw_background.width
+    height_scene = rect_raw_background.height
 
-function Scene:CreateBoxCommpent(str_name, x, y, material, width_physics, height_physics)
-	local physics_sprite = GameSprite:create(string.format("image/%s.png", str_name))
-    local width_commpent = physics_sprite:getContentSize().width
-    local height_commpent = physics_sprite:getContentSize().height
-    physics_sprite:setPosition(x, y)
+    self:SetWidth(width_scene)
+	self:SetHeight(height_scene)
 
-    if not width_physics then
-    	width_physics = width_commpent * 0.5
-    end
-    if not height_physics then
-    	height_physics = height_commpent * 0.5
-    end
-    local offset_x, offset_y, bool_dynamic = 0, 0, 1
-    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
-    PhysicsWorld:SetBoxBody(physics_sprite, width_physics, height_physics, material,offset_x, offset_y, bool_dynamic)
-    self.cc_layer:addChild(physics_sprite, Def.ZOOM_LEVEL_WORLD)
-    return physics_sprite, width_commpent, height_commpent
+	cc_layer_main:addChild(cc_sprite_background)
+
+	num_ret_code = PhysicsWorld:CreateRectEdge(0, width_scene, 0, height_scene)
+    assert(num_ret_code == 1)
 end
 
 function Scene:BuildTank(tank_x, tank_y, tb_param)
@@ -183,7 +109,11 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 		assert(false)
 		return
 	end
-	local physics_sprite_body, width_body, height_body = self:CreatePloygonCommpent(str_body, tank_x, tank_y)
+	local cc_layer_main = self:GetLayer("main")
+	local physics_sprite_body, width_body, height_body = Physics:CreatePolygonSprite(str_body, tank_x, tank_y)
+   
+    cc_layer_main:addChild(physics_sprite_body, Def.ZOOM_LEVEL_WORLD)
+
 	tb_ret.body = physics_sprite_body
 
     local str_weapon = tb_param.str_weapon
@@ -196,7 +126,6 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 	    cc_sprite_weapon:setAnchorPoint(cc.p(5 / width_weapon, 0.5))
 	    cc_sprite_weapon:setPosition(weapon_x, weapon_y)
 	    cc_sprite_weapon:setRotation(-45)
-	    cc_sprite_weapon:setTag(110)
 	    physics_sprite_body:addChild(cc_sprite_weapon)
 
 	    -- local weapon_x = tank_x
@@ -223,14 +152,13 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
     return tb_ret
 end
 
-
 function Scene:LoadControlUI()
 	local tb_ui = self:GetUI()
 	if not tb_ui then
 		return
 	end
 	local cc_layer = Ui:GetLayer(tb_ui)
-	local uilayer_control = Ui:LoadJson(cc_layer, "control/control.ExportJson")
+	local uilayer_control = Ui:LoadJson(cc_layer, "ui/control/control.ExportJson")
 	self.uilayer_control = uilayer_control
 	local function OnButtonEvent(widget_button, event)
 		local func = self.func_button_event[event]
@@ -292,6 +220,7 @@ function Scene:OnAttack(power)
 		return
 	end	
 
+	local cc_layer_main = self:GetLayer("main")
     local material = GamePhysicsWorld.MATERIAL:new(4, 0, 0)
 
     local physics_sprite_bullet = BombSprite:create("image/bullet.png")
@@ -305,7 +234,7 @@ function Scene:OnAttack(power)
 
     physics_sprite_bullet:setPosition(x + 20, y + 50)
     physics_sprite_bullet:setScale(float_scale)
-    self.cc_layer:addChild(physics_sprite_bullet, Def.ZOOM_LEVEL_WORLD)
+    cc_layer_main:addChild(physics_sprite_bullet, Def.ZOOM_LEVEL_WORLD)
 
     PhysicsWorld:SetCircleBody(
         physics_sprite_bullet, float_bullet_radius, 
@@ -313,6 +242,28 @@ function Scene:OnAttack(power)
 
     PhysicsWorld:SetBodyAngularVelocity(physics_sprite_bullet, 2)
     PhysicsWorld:ApplyImpulseByAngular(physics_sprite_bullet, -weapon:getRotation(), 100 + power * 10);
+end
+
+function Scene:SetGroundSprite(ground)
+	self.physics_sprite_ground = ground
+end
+
+function Scene:GetGroundSprite()
+	return self.physics_sprite_ground
+end
+
+function Scene:OnBomb(float_bomb_x, float_bomb_y)
+	local ground = self:GetGroundSprite()
+	local num_ret_code = PhysicsWorld:ClipperPolygonByCircle(ground, 30, 20, float_bomb_x, float_bomb_y)
+	if num_ret_code == 1 then
+	    local pSprite = cc.Sprite:create("image/hole-erase.png")
+	    pSprite:setPosition(float_bomb_x, float_bomb_y) 
+	    self.pHole:addChild(pSprite)
+	    
+	    local pSpriteEdge = cc.Sprite:create("image/hole-edge.png")
+	    pSpriteEdge:setPosition(float_bomb_x, float_bomb_y) 
+	    self.pEdge:addChild(pSpriteEdge)
+	end
 end
 
 function Scene:OnButtonBegan(widget_button)
@@ -367,9 +318,3 @@ Scene.func_button_event = {
 	[Ui.TOUCH_EVENT_ENDED] = Scene.OnButtonEnded,
 	[Ui.TOUCH_EVENT_CANCELED] = Scene.OnButtonCanceled,
 }
-
-
-
-
-
-	

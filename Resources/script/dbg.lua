@@ -27,6 +27,7 @@ function Debug:Init(nMode)
 			Event:RegistEvent(szEvent, self.Print, szEvent)
 		end
 	end
+	return 1
 end
 
 function Debug.Print(...)

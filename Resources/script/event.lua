@@ -12,6 +12,7 @@ end
 
 function Event:Preload()
 	self.tbGlobalEvent = {}
+	return 1
 end
 
 function Event:RegistWatcher(tbBlackEventList, fnCallBack)

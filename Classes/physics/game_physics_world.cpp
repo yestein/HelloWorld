@@ -87,16 +87,21 @@ void GamePhysicsWorld::PreSolve(b2Contact* contact, const b2Manifold* oldManifol
     
     bodyUserDataA = b2body_a->GetUserData();
     bodyUserDataB = b2body_b->GetUserData();
-    if (bodyUserDataA && bodyUserDataB)
+
+    sprite_body_a = static_cast<GameSprite*>(bodyUserDataA);
+    sprite_body_b = static_cast<GameSprite*>(bodyUserDataB);
+
+    if (sprite_body_a)
     {
-        sprite_body_a = static_cast<GameSprite*>(bodyUserDataA);
-        sprite_body_b = static_cast<GameSprite*>(bodyUserDataB);
-        if (sprite_body_a->IsBomb() && !sprite_body_b->IsBomb())
+        if (sprite_body_a->IsBomb() && (!sprite_body_b || !sprite_body_b->IsBomb()))
         {
             m_array_collide.insert(sprite_body_a);
         }
-        
-        if (sprite_body_b->IsBomb() && !sprite_body_a->IsBomb())
+    }
+    
+    if (sprite_body_b)
+    {
+        if (sprite_body_b->IsBomb() && (!sprite_body_a || !sprite_body_a->IsBomb()))
         {
             m_array_collide.insert(sprite_body_b);
         }
@@ -206,6 +211,12 @@ BOOL GamePhysicsWorld::Bomb(
         m_ptr_bomb_callback
     );
     m_ptr_b2world->QueryAABB(&bomb, aabb);
+    num_ret_code = bomb.ProcessBomb();
+    KGLOG_PROCESS_ERROR(num_ret_code);
+    if (m_ptr_bomb_callback)
+    {
+        m_ptr_bomb_callback->Bomb(float_bomb_x, float_bomb_y);
+    }
 
 	num_result = TRUE;
 Exit0:
@@ -582,12 +593,14 @@ BOOL GamePhysicsWorld::SetPolygonBodyWithShapeName(
     ptr_b2body_polygon = m_ptr_b2world->CreateBody(&bodyDef);
     KGLOG_PROCESS_ERROR(ptr_b2body_polygon);
 
-    num_ret_code = ptr_sprite->SetB2Body(ptr_b2body_polygon);
+    num_ret_code = ptr_gb2_shape_cache->addFixturesToBody(ptr_b2body_polygon, shape_name);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
-    ptr_gb2_shape_cache->addFixturesToBody(ptr_b2body_polygon, shape_name);
     anchor_point = ptr_gb2_shape_cache->anchorPointForShape(shape_name);
     ptr_sprite->setAnchorPoint(anchor_point);
+
+    num_ret_code = ptr_sprite->SetB2Body(ptr_b2body_polygon);
+    KGLOG_PROCESS_ERROR(num_ret_code);
 
 	num_result = TRUE;
 Exit0:
@@ -595,7 +608,10 @@ Exit0:
     {
         if(ptr_b2body_polygon)
         {
-            m_ptr_b2world->DestroyBody(ptr_b2body_polygon);
+            if (ptr_sprite->GetB2Body() != ptr_b2body_polygon)
+            {
+                m_ptr_b2world->DestroyBody(ptr_b2body_polygon);
+            }
         }
     }
 	return num_result;
@@ -735,7 +751,8 @@ int GamePhysicsWorld::CreateDistanceJoint(
     float float_offset_anchor_b_y,
     float float_length,
     float float_frequency_hz,
-    float float_damping_ratio
+    float float_damping_ratio,
+    BOOL bool_collide_connected
 )
 {
     int joint_id = -1;
@@ -761,6 +778,7 @@ int GamePhysicsWorld::CreateDistanceJoint(
         jd.localAnchorA.Set(float_offset_anchor_a_x / PTM_RATIO, float_offset_anchor_a_y / PTM_RATIO);
         jd.localAnchorB.Set(float_offset_anchor_b_x / PTM_RATIO, float_offset_anchor_b_y / PTM_RATIO);
         jd.length = float_length / PTM_RATIO;
+        jd.collideConnected = bool_collide_connected;
         if (float_length < 0.0f)
         {
             b2Vec2 p_a = ptr_b2body_a->GetWorldPoint(jd.localAnchorA);

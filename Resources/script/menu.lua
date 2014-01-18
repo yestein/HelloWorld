@@ -12,6 +12,7 @@ end
 
 function MenuMgr:Init()
 	self.tbMenu = {}
+	return 1
 end
 
 function MenuMgr:Uninit()

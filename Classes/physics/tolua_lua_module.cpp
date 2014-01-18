@@ -1,6 +1,6 @@
 /*
 ** Lua binding: lua_module
-** Generated automatically by tolua++-1.0.92 on 01/15/14 11:38:25.
+** Generated automatically by tolua++-1.0.92 on 01/18/14 22:34:21.
 */
 
 #ifndef __cplusplus
@@ -17,7 +17,7 @@ TOLUA_API int  tolua_lua_module_open (lua_State* tolua_S);
 #include "game_physics_world.h"  
 #include "game_sprite.h"  
 #include "bomb_sprite.h"  
-#include "Box2D/Dynamics/b2Body.h"
+#include "Box2D\Dynamics\b2Body.h"
 
 /* function to release collected object via destructor */
 #ifdef __cplusplus
@@ -326,6 +326,42 @@ static int tolua_lua_module_GamePhysicsWorld_Uninit00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: SetGravity of class  GamePhysicsWorld */
+#ifndef TOLUA_DISABLE_tolua_lua_module_GamePhysicsWorld_SetGravity00
+static int tolua_lua_module_GamePhysicsWorld_SetGravity00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GamePhysicsWorld",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,4,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GamePhysicsWorld* self = (GamePhysicsWorld*)  tolua_tousertype(tolua_S,1,0);
+  float float_gravity_x = ((float)  tolua_tonumber(tolua_S,2,0));
+  float float_gravity_y = ((float)  tolua_tonumber(tolua_S,3,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'SetGravity'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->SetGravity(float_gravity_x,float_gravity_y);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'SetGravity'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: CreateRectEdge of class  GamePhysicsWorld */
 #ifndef TOLUA_DISABLE_tolua_lua_module_GamePhysicsWorld_CreateRectEdge00
 static int tolua_lua_module_GamePhysicsWorld_CreateRectEdge00(lua_State* tolua_S)
@@ -591,7 +627,8 @@ static int tolua_lua_module_GamePhysicsWorld_CreateDistanceJoint00(lua_State* to
      !tolua_isnumber(tolua_S,8,1,&tolua_err) ||
      !tolua_isnumber(tolua_S,9,1,&tolua_err) ||
      !tolua_isnumber(tolua_S,10,1,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,11,&tolua_err)
+     !tolua_isnumber(tolua_S,11,1,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,12,&tolua_err)
  )
   goto tolua_lerror;
  else
@@ -607,11 +644,12 @@ static int tolua_lua_module_GamePhysicsWorld_CreateDistanceJoint00(lua_State* to
   float float_length = ((float)  tolua_tonumber(tolua_S,8,-1.0f));
   float float_frequency_hz = ((float)  tolua_tonumber(tolua_S,9,0.0f));
   float float_damping_ratio = ((float)  tolua_tonumber(tolua_S,10,0.0f));
+  int bool_collide_connected = ((int)  tolua_tonumber(tolua_S,11,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'CreateDistanceJoint'", NULL);
 #endif
   {
-   int tolua_ret = (int)  self->CreateDistanceJoint(ptr_sprite_a,float_offset_anchor_a_x,float_offset_anchor_a_y,ptr_sprite_b,float_offset_anchor_b_x,float_offset_anchor_b_y,float_length,float_frequency_hz,float_damping_ratio);
+   int tolua_ret = (int)  self->CreateDistanceJoint(ptr_sprite_a,float_offset_anchor_a_x,float_offset_anchor_a_y,ptr_sprite_b,float_offset_anchor_b_x,float_offset_anchor_b_y,float_length,float_frequency_hz,float_damping_ratio,bool_collide_connected);
    tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
   }
  }
@@ -1222,6 +1260,48 @@ static int tolua_lua_module_GamePhysicsWorld_MouseMove00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'MouseMove'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: ClipperPolygonByCircle of class  GamePhysicsWorld */
+#ifndef TOLUA_DISABLE_tolua_lua_module_GamePhysicsWorld_ClipperPolygonByCircle00
+static int tolua_lua_module_GamePhysicsWorld_ClipperPolygonByCircle00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"GamePhysicsWorld",0,&tolua_err) ||
+     !tolua_isusertype(tolua_S,2,"GameSprite",0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnumber(tolua_S,6,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,7,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  GamePhysicsWorld* self = (GamePhysicsWorld*)  tolua_tousertype(tolua_S,1,0);
+  GameSprite* ptr_gamesprite = ((GameSprite*)  tolua_tousertype(tolua_S,2,0));
+  float float_raius = ((float)  tolua_tonumber(tolua_S,3,0));
+  int int_precision = ((int)  tolua_tonumber(tolua_S,4,0));
+  float float_position_x = ((float)  tolua_tonumber(tolua_S,5,0));
+  float float_position_y = ((float)  tolua_tonumber(tolua_S,6,0));
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ClipperPolygonByCircle'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->ClipperPolygonByCircle(ptr_gamesprite,float_raius,int_precision,float_position_x,float_position_y);
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'ClipperPolygonByCircle'.",&tolua_err);
  return 0;
 #endif
 }
@@ -2275,8 +2355,7 @@ static int tolua_lua_module_b2Body_ApplyTorque00(lua_State* tolua_S)
  if (
      !tolua_isusertype(tolua_S,1,"b2Body",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,4,&tolua_err)
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
@@ -2284,12 +2363,11 @@ static int tolua_lua_module_b2Body_ApplyTorque00(lua_State* tolua_S)
  {
   b2Body* self = (b2Body*)  tolua_tousertype(tolua_S,1,0);
   float torque = ((float)  tolua_tonumber(tolua_S,2,0));
-  bool wake = ((bool)  tolua_toboolean(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ApplyTorque'", NULL);
 #endif
   {
-   self->ApplyTorque(torque,wake);
+   self->ApplyTorque(torque);
   }
  }
  return 0;
@@ -2310,8 +2388,7 @@ static int tolua_lua_module_b2Body_ApplyAngularImpulse00(lua_State* tolua_S)
  if (
      !tolua_isusertype(tolua_S,1,"b2Body",0,&tolua_err) ||
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
-     !tolua_isboolean(tolua_S,3,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,4,&tolua_err)
+     !tolua_isnoobj(tolua_S,3,&tolua_err)
  )
   goto tolua_lerror;
  else
@@ -2319,12 +2396,11 @@ static int tolua_lua_module_b2Body_ApplyAngularImpulse00(lua_State* tolua_S)
  {
   b2Body* self = (b2Body*)  tolua_tousertype(tolua_S,1,0);
   float impulse = ((float)  tolua_tonumber(tolua_S,2,0));
-  bool wake = ((bool)  tolua_toboolean(tolua_S,3,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'ApplyAngularImpulse'", NULL);
 #endif
   {
-   self->ApplyAngularImpulse(impulse,wake);
+   self->ApplyAngularImpulse(impulse);
   }
  }
  return 0;
@@ -3040,6 +3116,7 @@ TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetInstance",tolua_lua_module_GamePhysicsWorld_GetInstance00);
    tolua_function(tolua_S,"Init",tolua_lua_module_GamePhysicsWorld_Init00);
    tolua_function(tolua_S,"Uninit",tolua_lua_module_GamePhysicsWorld_Uninit00);
+   tolua_function(tolua_S,"SetGravity",tolua_lua_module_GamePhysicsWorld_SetGravity00);
    tolua_function(tolua_S,"CreateRectEdge",tolua_lua_module_GamePhysicsWorld_CreateRectEdge00);
    tolua_function(tolua_S,"SetBoxBody",tolua_lua_module_GamePhysicsWorld_SetBoxBody00);
    tolua_function(tolua_S,"SetCircleBody",tolua_lua_module_GamePhysicsWorld_SetCircleBody00);
@@ -3061,6 +3138,7 @@ TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
    tolua_function(tolua_S,"MouseDown",tolua_lua_module_GamePhysicsWorld_MouseDown00);
    tolua_function(tolua_S,"MouseUp",tolua_lua_module_GamePhysicsWorld_MouseUp00);
    tolua_function(tolua_S,"MouseMove",tolua_lua_module_GamePhysicsWorld_MouseMove00);
+   tolua_function(tolua_S,"ClipperPolygonByCircle",tolua_lua_module_GamePhysicsWorld_ClipperPolygonByCircle00);
   tolua_endmodule(tolua_S);
   #ifdef __cplusplus
   tolua_cclass(tolua_S,"DebugPhysicsLayer","DebugPhysicsLayer","Layer",tolua_collect_DebugPhysicsLayer);

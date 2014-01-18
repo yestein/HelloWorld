@@ -12,12 +12,14 @@ public:
 	int Init(float float_gravity_x, float float_gravity_y);
 	int Uninit();
 
-   int CreateRectEdge(
-        float float_left,
-        float float_right, 
-        float float_buttom,
-        float float_top
-    );
+	int SetGravity(float float_gravity_x, float float_gravity_y);
+
+	int CreateRectEdge(
+		float float_left,
+		float float_right, 
+		float float_buttom,
+		float float_top
+	);
 
     int SetBoxBody(
         GameSprite* ptr_sprite, 
@@ -61,7 +63,8 @@ public:
         float float_offset_anchor_b_y,
         float float_length = -1.0f,
         float float_frequency_hz = 0.0f,
-        float float_damping_ratio = 0.0f
+        float float_damping_ratio = 0.0f,
+		int bool_collide_connected = 0
     );
 
     // °ó¶¨ÉìËõ¹Ø½Ú
@@ -165,4 +168,12 @@ public:
     int MouseDown(float float_x, float float_y);
     void MouseUp(float float_x, float float_y);
     int MouseMove(float float_x, float float_y);
+    
+    int ClipperPolygonByCircle(
+        GameSprite* ptr_gamesprite,
+        float float_raius,
+        int int_precision,
+        float float_position_x,
+        float float_position_y
+    );
 };

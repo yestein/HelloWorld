@@ -71,17 +71,22 @@ void GB2ShapeCache::reset() {
 	shapeObjects.clear();
 }
 
-void GB2ShapeCache::addFixturesToBody(b2Body *body, const std::string &shape) {
-	std::map<std::string, GB2BodyDef *>::iterator pos = shapeObjects.find(shape);
-	assert(pos != shapeObjects.end());
-	
-	GB2BodyDef *so = (*pos).second;
+int GB2ShapeCache::addFixturesToBody(b2Body *body, const std::string &shape) {
 
-	GB2FixtureDef *fix = so->fixtures;
+    std::map<std::string, GB2BodyDef *>::iterator pos = shapeObjects.find(shape);
+    if(pos == shapeObjects.end())
+    {
+        return FALSE;
+    }
+
+    GB2BodyDef *so = (*pos).second;
+
+    GB2FixtureDef *fix = so->fixtures;
     while (fix) {
         body->CreateFixture(&fix->fixture);
         fix = fix->next;
     }
+    return TRUE;
 }
 
 GB2FixtureDef* GB2ShapeCache::GetFixtures(const std::string &shape)

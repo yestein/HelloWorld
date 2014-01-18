@@ -91,36 +91,6 @@ end
 
 function Lib:Reload()
 	print("Lib:Reload")
-	dofile("script/maze.lua")
-	dofile("script/lib.lua")
-	dofile("script/define.lua")
-	dofile("script/hero.lua")
-end
-
-function Lib:GetLogicPosByPosition(nX, nY)
-	local tbSize = Maze:GetSize()
-	local nLogicX = math.floor(nX / Def.BLOCK_WIDTH)
-	local nLogicY = math.floor(nY / Def.BLOCK_HEIGHT)
-
-	nLogicX = nLogicX + Def.MAZE_LOGIC_WIDTH / 2 + 1
-	nLogicY = nLogicY + math.floor(tbSize.height / Def.BLOCK_HEIGHT / 2) + 1
-	return nLogicX, nLogicY
-end
-
-function Lib:GetPositionByLogicPos(nLogicX, nLogicY)
-	local tbSize = Maze:GetSize()
-	local nX = (nLogicX - Def.MAZE_LOGIC_WIDTH / 2 - 0.5) * Def.BLOCK_WIDTH
-	local nY = (nLogicY - math.floor(tbSize.height / Def.BLOCK_HEIGHT / 2) - 0.5) * Def.BLOCK_HEIGHT
-	
-	return nX, nY
-end
-
-function Lib:IsHero(dwId)
-	if dwId <= 100 then
-		return 1
-	else
-		return 0
-	end
 end
 
 function Lib:GetDistance(nLogicX_A, nLogicY_A, nLogicX_B, nLogicY_B)
@@ -129,17 +99,5 @@ function Lib:GetDistance(nLogicX_A, nLogicY_A, nLogicX_B, nLogicY_B)
 	local nDistanceY = nLogicY_A - nLogicY_B
 	
 	return math.sqrt((nDistanceY * nDistanceY) + (nDistanceX * nDistanceX))
-end
-
-function Lib:GetOppositeDirection(nDir)
-	if nDir == Def.DIR_DOWN then
-		return Def.DIR_UP
-	elseif nDir == Def.DIR_RIGHT then
-		return Def.DIR_LEFT
-	elseif nDir == Def.DIR_LEFT then
-		return Def.DIR_RIGHT
-	elseif nDir == Def.DIR_UP then
-		return Def.DIR_DOWN
-	end
 end
 

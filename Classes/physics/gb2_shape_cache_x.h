@@ -76,7 +76,7 @@ namespace cocos2d {
 	public:
 		bool init();			
 		void addShapesWithFile(const std::string &plist);
-		void addFixturesToBody(b2Body *body, const std::string &shape);
+		int addFixturesToBody(b2Body *body, const std::string &shape);
         GB2FixtureDef* GetFixtures(const std::string &shape);
 		cocos2d::Point anchorPointForShape(const std::string &shape);
 		void reset();

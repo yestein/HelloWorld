@@ -26,6 +26,7 @@ end
 function Ui:Init()
     self.tb_ui_scene = {}
     self:RegistEvent()
+    return 1
 end
 
 function Ui:InitScene(str_scene_name, cc_scene)
@@ -181,7 +182,7 @@ end
 
 function Ui:LoadJson(cc_layer, str_file_name)
     local uilayer = ccs.UILayer:create()
-    uilayer:addWidget(ccs.GUIReader:getInstance():widgetFromJsonFile("control/control.ExportJson"))
+    uilayer:addWidget(ccs.GUIReader:getInstance():widgetFromJsonFile(str_file_name))
     cc_layer:addChild(uilayer)
     return uilayer
 end

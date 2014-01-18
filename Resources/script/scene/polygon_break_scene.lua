@@ -8,81 +8,73 @@
 
 local Scene = SceneMgr:GetClass("PolygonBreak", 1)
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
+Scene.can_touch = 1 --可接受触摸事件
+Scene.can_pick = 1 --可用鼠标拖拽物理刚体
 
-function Scene:Create()
-	local sceneGame = self:GetCCObj()
-	if not sceneGame then
-		return
-	end
-	local cc_layer = cc.Layer:create()
+function Scene:_Uninit( ... )
+    -- body
+end
+
+function Scene:_Init()
+	local cc_layer_main = self:GetLayer("main")
 	local tbVisibleSize = CCDirector:getInstance():getVisibleSize()
-	
-       
-    PhysicsWorld:CreateRectEdge(0, tbVisibleSize.width * 2, 0, tbVisibleSize.height * 2);
+	local PhysicsWorld = self:GetPhysicsWorld()
     
-    local pMainBody = GameSprite:create("image/background.png")
-    local tbBodyRect = pMainBody:getTextureRect()
-    local float_body_x = tbBodyRect.width / 2
-    local float_body_y = tbBodyRect.height / 2
-    pMainBody:setPosition(float_body_x, float_body_y)
-    cc_layer:addChild(pMainBody)
-    self.test_polygon = pMainBody
+    PhysicsWorld:CreateRectEdge(0, tbVisibleSize.width, 0, tbVisibleSize.height);
 
+    local gamesprite_map = GameSprite:create("image/map.png")
+    local tbRect = gamesprite_map:getTextureRect()
+    local clippingNodeBG = cc.ClippingNode:create(gamesprite_map)
+    gamesprite_map:setPosition(tbVisibleSize.width / 2, tbVisibleSize.height / 2)
+    clippingNodeBG:setAlphaThreshold(0.05)
+    clippingNodeBG:setInverted(false)
+    
+    
+    local clippingNode = cc.ClippingNode:create(gamesprite_map)
+    clippingNode:setAlphaThreshold(0.05)
+    clippingNode:setInverted(true)    
+    clippingNode:addChild(gamesprite_map)
+    
+    local pHole = cc.Node:create()
+    clippingNode:setStencil(pHole)
+    self.pHole = pHole
+
+    local pEdge = cc.Node:create()
+    clippingNode:addChild(pEdge)
+    self.pEdge = pEdge
+
+    cc_layer_main:addChild(clippingNodeBG)
+    clippingNodeBG:addChild(clippingNode)
+
+    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map-box2d.plist") == 1)
+    assert(PhysicsWorld:SetPolygonBodyWithShapeName(gamesprite_map, "map", 0, 0, 0) == 1)
+    self.test_polygon = gamesprite_map
+
+    local pFrontWheel = GameSprite:create("image/circle.png")
+    local float_ball_x = tbVisibleSize.width / 2 + 30
+    local float_ball_y = tbVisibleSize.height - 30
+    pFrontWheel:setPosition(float_ball_x, float_ball_y)
+    cc_layer_main:addChild(pFrontWheel)
+
+    local float_radius = pFrontWheel:getContentSize().width * 0.5;
     local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
-    PhysicsWorld:SetBoxBody(pMainBody, tbBodyRect.width / 2, tbBodyRect.height / 2, m, 0, 0, 0)
+    PhysicsWorld:SetCircleBody(pFrontWheel, float_radius, m, 0, 0, 1)
+    return 1
+end
 
-
-    local touchBeginPoint = nil
-    local touchStartPoint = nil
-    local function onTouchBegan(x, y)
-        touchBeginPoint = {x = x, y = y}
-        touchStartPoint = {x = x, y = y}
-        local nX, nY = cc_layer:getPosition()
-        return true
-    end
-
-    local function onTouchMoved(x, y)
-        if touchBeginPoint then
-            local nX, nY = cc_layer:getPosition()
-
-            local nNewX, nNewY = nX + x - touchBeginPoint.x, nY + y - touchBeginPoint.y
-            cc_layer:setPosition(nNewX, nNewY)
-
-            touchBeginPoint = {x = x, y = y}
-        end
-    end
-
-    local function onTouchEnded(x, y)
-         local nX, nY = cc_layer:getPosition()
-         if x == touchStartPoint.x and y == touchStartPoint.y then
-         	self:BreakPolygon(x - nX, y - nY)
-         end
-        touchBeginPoint = nil
-    end
-
-    local function onTouch(eventType, x, y)
-        if eventType == "began" then   
-            return onTouchBegan(x, y)
-        elseif eventType == "moved" then
-            return onTouchMoved(x, y)
-        else
-            return onTouchEnded(x, y)
-        end
-    end
-
-    cc_layer:registerScriptTouchHandler(onTouch)
-    cc_layer:setTouchEnabled(true)
-
-    local function tick(delta)
-    	PhysicsWorld:Update(delta);
-    end
-    self.nRegPhysicsUpdate = CCDirector:getInstance():getScheduler():scheduleScriptFunc(tick, 0, false)
-
-	Event:FireEvent("SceneCreate", self:GetClassName(), self:GetName())
-    return cc_layer
+function Scene:OnClick(x, y)
+    self:BreakPolygon(x, y)
 end
 
 function Scene:BreakPolygon(x, y)
 	local polygon = self.test_polygon
+    PhysicsWorld:ClipperPolygonByCircle(polygon, 30, 20, x, y)
+
+    local pSprite = cc.Sprite:create("image/hole-erase.png")
+    pSprite:setPosition(x, y) 
+    self.pHole:addChild(pSprite)
     
+    local pSpriteEdge = cc.Sprite:create("image/hole-edge.png")
+    pSpriteEdge:setPosition(x, y) 
+    self.pEdge:addChild(pSpriteEdge)
 end

@@ -17,10 +17,19 @@ end
 
 function SceneMgr:Init()
 	self.tb_logic_scene = {}
+    return 1
 end
 
 function SceneMgr:Uninit()
 	self.tb_logic_scene = {}
+end
+
+function SceneMgr:OnLoop(delta)
+    for str_scene_name, tb_scene in pairs(self.tb_logic_scene) do
+        if tb_scene.OnLoop then
+            tb_scene:OnLoop(delta)
+        end
+    end
 end
 
 function SceneMgr:GetScene(str_name)
@@ -38,9 +47,36 @@ function SceneMgr:GetClass(str_class_name, bool_create)
     if not SceneMgr.tb_class_logic_scene[str_class_name] and bool_create then
         local tb_class = Lib:NewClass(self._SceneBase)
         tb_class.str_class_name = str_class_name
+        tb_class.tb_event_listen = {}
         SceneMgr.tb_class_logic_scene[str_class_name] = tb_class
     end
     return SceneMgr.tb_class_logic_scene[str_class_name]    
+end
+
+
+if _DEBUG then
+    --检查是否所有的继承类都实现了该实现的方法
+    function SceneMgr:CheckAllClass()
+
+        function check(tb_class, str_function)
+            if not tb_class[str_function] then
+                cclog("[%s] no function[%s]", tb_class.str_class_name, str_function)
+                return 0
+            end
+            return 1
+        end
+
+        for str_class_name, tb_class in pairs(SceneMgr.tb_class_logic_scene) do
+            if check(tb_class, "_Init") ~= 1 then
+                return 0
+            end
+
+            if check(tb_class, "_Uninit") ~= 1 then
+                return 0
+            end
+        end
+        return 1
+    end
 end
 
 function SceneMgr:CreateScene(str_name, str_class_name)
@@ -51,14 +87,12 @@ function SceneMgr:CreateScene(str_name, str_class_name)
     if not str_class_name then
         str_class_name = str_name
     end
-     local tb_class = SceneMgr:GetClass(str_class_name)
+    local tb_class = SceneMgr:GetClass(str_class_name)
     if not tb_class then
         return cclog("Error! No Scene Class [%s] !", str_class_name)
     end
-
-	local cc_scene = cc.Scene:create()   
 	local tb_logic_scene = Lib:NewClass(tb_class)
-    tb_logic_scene:Init(str_name, cc_scene)
+    tb_logic_scene:Init(str_name)
     self.tb_logic_scene[str_name] = tb_logic_scene
 	return tb_logic_scene
 end

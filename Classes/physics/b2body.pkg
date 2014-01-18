@@ -11,9 +11,9 @@ public:
     float GetAngularVelocity() const;
 
 
-    void ApplyTorque(float torque, bool wake);
+    void ApplyTorque(float torque);
 
-    void ApplyAngularImpulse(float impulse, bool wake);
+    void ApplyAngularImpulse(float impulse);
 
     float GetMass() const;
 

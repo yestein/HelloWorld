@@ -10,21 +10,10 @@ if not Def then
 	Def = {}
 end
 
-local Id = 1
-local function Accumulate(nId)
-	if nId then
-		Id = nId
-	else
-		Id = Id + 1
-	end
-	return Id
-end
-
 Def.szMenuFontName = "MarkerFelt-Thin"
 if device == "win32" then
 	Def.szMenuFontName = "Microsoft Yahei"
 end
-
 
 Def.ZOOM_LEVEL_WORLD = 1
 Def.ZOOM_LEVEL_BULLET = 2
@@ -42,14 +31,9 @@ Def.tbColor = {
 	["yellow"] = cc.c3b(255, 255, 0),
 }
 
-if device == "win32" then
-	Def.szBGImg     = "image/background.png"
-	Def.szTitleFile = "image/ui/title_bg.png"
-	Def.szFightImg  = "image/icon.png"
-	Def.szMainBGImg = "image/main.png"
-else
-	Def.szBGImg     = "background.png"
-	Def.szTitleFile = "title_bg.png"
-	Def.szFightImg  = "icon.png"
-	Def.szMainBGImg = "main.png"
-end
+Def.str_ground_img = "image/map_ground.png"
+Def.szBGImg     = "image/background.png"
+Def.szTitleFile = "image/ui/title_bg.png"
+Def.szFightImg  = "image/icon.png"
+Def.szMainBGImg = "image/main.png"
+

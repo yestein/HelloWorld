@@ -21,9 +21,8 @@ class BombCallback
 public:
     virtual ~BombCallback() {}
 
-    /// Called for each fixture found in the query AABB.
-    /// @return false to terminate the query.
-    virtual bool BeBombed(GameSprite* ptr_sprite) = 0;
+    virtual BOOL Bomb(float float_bomb_x, float float_bomb_y) = 0;
+    virtual BOOL BeBombed(GameSprite* ptr_sprite) = 0;
 };
 
 class GamePhysicsWorld : public b2ContactListener
@@ -79,6 +78,12 @@ public:
     }
 
     BOOL SetupBombCallBack(BombCallback* ptr_callback);
+
+    BOOL SetGravity(float float_gravity_x, float float_gravity_y)
+    {
+        m_ptr_b2world->SetGravity(b2Vec2(float_gravity_x, float_gravity_y));
+        return TRUE;
+    }
 
     BOOL CreateRectEdge(
         float float_left,
@@ -139,7 +144,8 @@ public:
         float float_offset_anchor_b_y,
         float float_length = -1.0f,
         float float_frequency_hz = 0.0f,
-        float float_damping_ratio = 0.0f
+        float float_damping_ratio = 0.0f,
+        BOOL bool_collide_connected = 0
     );
 
     // °ó¶¨ÉìËõ¹Ø½Ú
@@ -251,8 +257,7 @@ public:
         int int_precision,
         float float_position_x,
         float float_position_y
-    );
-    
+    );    
 
     b2World* GetWorld(){ return m_ptr_b2world;}
 

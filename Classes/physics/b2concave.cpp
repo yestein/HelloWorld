@@ -90,7 +90,7 @@ int b2Concave::BuildShapes(const b2Vec2* const_ptr_vetor_vertices, int count_ver
         int ret_start_index = -1;
         int ret_end_index = -1;
         num_ret_code = SlicePolygon(ptr_vertices_cur_used, num_rest_vertice, &shape, &ret_start_index, &ret_end_index);
-        LOG_PROCESS_ERROR(num_ret_code);
+        LOG_PROCESS_ERROR(num_ret_code && "Slice Failed");
         LOG_PROCESS_ERROR(shape.count_point >= 3);
         LOG_PROCESS_ERROR(ret_start_index >= 0);
         LOG_PROCESS_ERROR(ret_end_index >= 0);
@@ -376,7 +376,7 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
             }
             PROCESS_SUCCES(TRUE);
         }
-        LOG_PROCESS_ERROR(FALSE);
+        LOG_PROCESS_ERROR(FALSE && "Not Found Intersection");
     }
     *ptr_start_index = 0;
     *ptr_end_index = count_vertices - 1;

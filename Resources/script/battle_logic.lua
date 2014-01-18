@@ -10,14 +10,10 @@ if not BattleLogic then
 	BattleLogic = {}
 end
 
-BattleLogic.LOGIC_FPS = 25
-BattleLogic.TIME_PER_FRAME = 1 / BattleLogic.LOGIC_FPS
-
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
 function BattleLogic:Init(tb_player, tb_enemy)
-	self.accumulate = 0
-	self.num_frame = 0
+	self.is_run = 1
 	self.tb_player = tb_player
 	self.tb_enemy = tb_enemy
 	self.str_move_direction = nil
@@ -26,38 +22,15 @@ function BattleLogic:Init(tb_player, tb_enemy)
 end
 
 function BattleLogic:Uninit()
-end
-
-function BattleLogic:StartMove(str_direction)
-	self.str_move_direction = str_direction
-end
-
-function BattleLogic:StopMove()
-	self.str_move_direction = nil
-end
-
-function BattleLogic:StartAdjust(str_direction)
-	self.str_adjust_direction = str_direction
-end
-
-function BattleLogic:StopAdjust()
-	self.str_adjust_direction = nil
-end
-
-function BattleLogic:ReadyToAttack()
-	self.num_attack_power = 0
-	self.num_power_delta = 1
-end
-
-function BattleLogic:Attack()
-	Event:FireEvent("Attack", self.num_attack_power)
-	self.num_attack_power = nil
+	self.is_run = 0
 end
 
 --逻辑帧
-function BattleLogic:OnActive()
-	self.num_frame = self.num_frame + 1
-	if self.num_frame % 3 == 0 then
+function BattleLogic:OnActive(num_frame)
+	if self.is_run ~= 1 then
+		return
+	end
+	if num_frame % 3 == 0 then
 		if self.str_move_direction then
 			local body = self.tb_player.body
 			local impluse = 2500
@@ -65,7 +38,6 @@ function BattleLogic:OnActive()
 				impluse = -2500
 			end
 			PhysicsWorld:ApplyImpulse(body, impluse, 0)
-			print(1)
 			Event:FireEvent("BodyMove", impluse)
 		end
 	
@@ -100,10 +72,29 @@ function BattleLogic:OnActive()
 	end
 end
 
-function BattleLogic:OnLoop(delta)
-	self.accumulate = self.accumulate + delta
-	if self.accumulate > self.TIME_PER_FRAME then
-		self:OnActive()
-		self.accumulate = self.accumulate - self.TIME_PER_FRAME
-	end
+function BattleLogic:StartMove(str_direction)
+	self.str_move_direction = str_direction
 end
+
+function BattleLogic:StopMove()
+	self.str_move_direction = nil
+end
+
+function BattleLogic:StartAdjust(str_direction)
+	self.str_adjust_direction = str_direction
+end
+
+function BattleLogic:StopAdjust()
+	self.str_adjust_direction = nil
+end
+
+function BattleLogic:ReadyToAttack()
+	self.num_attack_power = 0
+	self.num_power_delta = 1
+end
+
+function BattleLogic:Attack()
+	Event:FireEvent("Attack", self.num_attack_power)
+	self.num_attack_power = nil
+end
+
