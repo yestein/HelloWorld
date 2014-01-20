@@ -62,7 +62,7 @@ public:
     );
 
     // 绑定有距线段关节
-    int CreateDistanceJoint(
+    b2Joint* CreateDistanceJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -76,7 +76,7 @@ public:
     );
 
 	// 绑定焊接关节
-    int CreateWeldJoint(
+    b2Joint* CreateWeldJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -88,7 +88,7 @@ public:
     );
 
     // 绑定伸缩关节
-    int CreatePrismaticJoint(
+    b2Joint* CreatePrismaticJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -105,7 +105,7 @@ public:
     );
 
     // 绑定固定伸缩关节
-    int CreateFixedPrismaticJoint(
+    b2Joint* CreateFixedPrismaticJoint(
         GameSprite* ptr_sprite,
         float float_offset_anchor_x,
         float float_offset_anchor_y,
@@ -119,7 +119,7 @@ public:
     );    
 
     // 绑定旋转关节，注：角度单位为弧度制（π）
-    int CreateRevoluteJoint(
+    b2Joint* CreateRevoluteJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -135,7 +135,7 @@ public:
     );
 
     // 绑定固定旋转关节，注：角度单位为弧度制（π）
-    int CreateFixedRevoluteJoint(
+    b2Joint* CreateFixedRevoluteJoint(
         GameSprite* ptr_sprite,
         float float_offset_anchor_x,
         float float_offset_anchor_y,
@@ -147,7 +147,7 @@ public:
     );
 
     // 绑定车轮关节（与旋转关节的区别在于可以产生颠簸效果）
-    int CreateWheelJoint(
+    b2Joint* CreateWheelJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -164,28 +164,20 @@ public:
 
     
     // 绑定齿轮关节
-    int CreateGearJoint(
+    b2Joint* CreateGearJoint(
         GameSprite* ptr_sprite_a,
         GameSprite* ptr_sprite_b,
-        int joint_id_a,
-        int joint_id_b,
+        b2Joint* joint_a,
+        b2Joint* joint_b,
         float float_ratio
     );
-
-    int DestoryJoint(int joint_id);    
 
 	int ApplyTorque(GameSprite* sprite, float torque);
     int ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y);
     int ApplyImpulseByAngular(GameSprite* sprite, float float_angular, float float_strength);
+	int ApplyAngularImpulse(GameSprite* sprite, float impulse);
 
     int Update(float float_delta);
-    int Bomb(
-        float float_bomb_x,
-        float float_bomb_y, 
-        float float_power_linear,
-        float float_power_angular,
-        float float_bomb_radius
-    );
 
     int MouseDown(float float_x, float float_y);
     void MouseUp(float float_x, float float_y);

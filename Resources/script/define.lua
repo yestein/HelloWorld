@@ -37,7 +37,7 @@ Def.szTitleFile = "image/ui/title_bg.png"
 Def.szFightImg  = "image/icon.png"
 Def.szMainBGImg = "image/main.png"
 
-Def.MOTOR_POWER = 50
+Def.MOTOR_POWER = 30
 
 Def.BULLET_DENSITY = 0.01
 Def.BULLET_POWER_LINERAR = 1

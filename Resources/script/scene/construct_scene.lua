@@ -30,38 +30,48 @@ function Scene:_Init()
 	num_ret_code = PhysicsWorld:CreateRectEdge(sprite_background, 0, tb_visible_size.width, 0, tb_visible_size.height)
 	assert(num_ret_code == 1)
 	
+	local physics_sprite_body, width_body, height_body = Physics:CreatePolygonSprite("tank", 200, 50)
+    cc_layer_main:addChild(physics_sprite_body)
+
 	local tbParam = {
-		str_main_body = "image/rect3.png",
 		str_wheel = "image/tank_wheel.png",
+		str_crawler = "image/rect2.png",
 	}
-	local tb_ret = Physics:CreateCrawlerBelt(200, 100, tbParam)
+	local tb_ret = Physics:CreateCrawlerBelt(cc_layer_main, 200, 100, physics_sprite_body, 50, tbParam)
 	if not tb_ret then
-		return
-	end
-	cc_layer_main:addChild(tb_ret.motor)
-	cc_layer_main:addChild(tb_ret.main_body)
-	cc_layer_main:addChild(tb_ret.wheel_back)
-	cc_layer_main:addChild(tb_ret.wheel_middle)
-	cc_layer_main:addChild(tb_ret.wheel_front)
-	for _, crawler in ipairs(tb_ret.tb_crawler) do
-		cc_layer_main:addChild(crawler)
+		assert(false)
 	end
 
-	local tbParam_2 = {
-		str_main_body = "image/rect4.png",
-		str_wheel = "image/circle.png",
+	local tb_property = {
+		mask_bits     = 0,
 	}
-	local tb_ret_2 = Physics:CreateCrawlerBelt(400, 100, tbParam_2)
-	if not tb_ret_2 then
-		return
-	end
-	cc_layer_main:addChild(tb_ret_2.motor)
-	cc_layer_main:addChild(tb_ret_2.main_body)
-	cc_layer_main:addChild(tb_ret_2.wheel_back)
-	cc_layer_main:addChild(tb_ret_2.wheel_middle)
-	cc_layer_main:addChild(tb_ret_2.wheel_front)
-	for _, crawler in ipairs(tb_ret_2.tb_crawler) do
-		cc_layer_main:addChild(crawler)
-	end
+	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", 200, 100, tb_property)
+	motor:setVisible(false)
+	cc_layer_main:addChild(motor)
+
+	local joint_motor_body = PhysicsWorld:CreateRevoluteJoint(
+    	physics_sprite_body, 0, 0,
+    	motor, 0, 0
+    )
+    assert(joint_motor_body)
+
+    local joint_motor_wheel_back = PhysicsWorld:CreateGearJoint(
+    	motor, tb_ret.wheel_back,
+    	joint_motor_body, tb_ret.tb_joint.wheel_back, 1
+    )
+    assert(joint_motor_wheel_back)
+
+    local joint_motor_wheel_middle = PhysicsWorld:CreateGearJoint(
+    	motor, tb_ret.wheel_middle,
+    	joint_motor_body, tb_ret.tb_joint.wheel_middle, 1
+    )
+    assert(joint_motor_wheel_middle)
+
+    local joint_motor_wheel_front = PhysicsWorld:CreateGearJoint(
+    	motor, tb_ret.wheel_front,
+    	joint_motor_body, tb_ret.tb_joint.wheel_front, 1
+    )
+    assert(joint_motor_wheel_front)
+
 	return 1
 end

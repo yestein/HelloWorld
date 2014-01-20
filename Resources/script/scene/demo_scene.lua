@@ -11,10 +11,11 @@ Scene.tb_property = {
 	can_pick      = 1,--可用鼠标拖拽物理刚体
 	can_drag      = 1,--可拖拽屏幕
 	limit_drag    = 1,--拖拽屏幕是否受限制（仅在场景范围内拖拽）
-	debug_physics = 1, --是否显示物理引擎调试绘制
+	-- debug_physics = 1, --是否显示物理引擎调试绘制
 }
 
 Scene:DeclareListenEvent("Bomb", "OnBomb")
+Scene:DeclareListenEvent("BeBomb", "OnBeBombed")
 Scene:DeclareListenEvent("WeaponRotate", "OnWeaponRotate")
 Scene:DeclareListenEvent("PowerChanged", "OnPowerChanged")
 Scene:DeclareListenEvent("Attack", "OnAttack")
@@ -36,13 +37,14 @@ function Scene:_Init()
 
 	self:CreateMap()
 
+	self:SetFocus(0)
     local tb_param = {
     	str_body = "tank",
     	str_weapon = "tank_weapon",
 	}
 	local width_scene = self:GetWidth()
-    self.tb_player = self:BuildTank(100, 100, tb_param)
-    self.tb_enemy = self:BuildTank(width_scene / 2 + 300, 418, tb_param)
+    self.tb_player = self:BuildTank(100, 200, tb_param)
+    self.tb_enemy = self:BuildTank(width_scene / 2 + 300, 440, tb_param)
 
     local x, y = self.tb_player.body:getPosition()
 	self:MoveCamera(x, y)
@@ -51,13 +53,21 @@ function Scene:_Init()
     return 1
 end
 
+function Scene:SetFocus(is_need_focus)
+	self.is_need_focus = is_need_focus
+end
+
+function Scene:IsNeedFocus()
+	return self.is_need_focus
+end
+
 function Scene:OnLoop(delta)
 	if self.physics_sprite_bullet then
 		local x, y = self.physics_sprite_bullet:getPosition()
 		self:MoveCamera(x, y)
-	-- elseif self.tb_player.body then
-	-- 	local x, y = self.tb_player.body:getPosition()
-	-- 	self:MoveCamera(x, y)
+	elseif self:IsNeedFocus() == 1 and self.tb_player.body then
+		local x, y = self.tb_player.body:getPosition()
+		self:MoveCamera(x, y)
 	end	
 end
 
@@ -126,9 +136,9 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 		return
 	end
 	local cc_layer_main = self:GetLayer("main")
+
 	local physics_sprite_body, width_body, height_body = Physics:CreatePolygonSprite(str_body, tank_x, tank_y)
-   
-    cc_layer_main:addChild(physics_sprite_body, Def.ZOOM_LEVEL_WORLD)
+    cc_layer_main:addChild(physics_sprite_body)
 
 	tb_ret.body = physics_sprite_body
 
@@ -143,80 +153,50 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 	    cc_sprite_weapon:setPosition(weapon_x, weapon_y)
 	    cc_sprite_weapon:setRotation(-45)
 	    physics_sprite_body:addChild(cc_sprite_weapon)
-
-	    -- local weapon_x = tank_x
-	    -- local weapon_y = tank_y
-	    -- local material = GamePhysicsWorld.MATERIAL:new(2, 0.2, 0.5)
-	    -- local physics_sprite_weapon, width_weapon, height_weapon = self:CreateBoxCommpent(str_weapon, weapon_x, weapon_y, material)
-	    -- tb_ret.weapon = physics_sprite_weapon
-
-	    -- local b2body = physics_sprite_weapon:GetB2Body()
-	    -- b2body:SetGravityScale(0)
-
-	    -- local bool_enable_limit = 1
-	    -- local max_angel = 3.14
-	    -- local min_angel = 0
-	    -- local motor_speed = 10
-	    -- local motor_torque = 0
-	    -- local joint_id = PhysicsWorld:CreateRevoluteJoint(
-		   --  physics_sprite_body, -30, 10,
-		   --  physics_sprite_weapon, -width_weapon * 0.5 + 5, 0,
-		   --  bool_enable_limit, min_angel, max_angel, motor_speed, motor_torque)
 		tb_ret.weapon = cc_sprite_weapon
 	end
 
 	local tbParam = {
-		str_main_body = "image/rect3.png",
 		str_wheel = "image/tank_wheel.png",
+		str_crawler = "image/rect2.png",
 	}
-	local tb_crawler_belt = Physics:CreateCrawlerBelt(tank_x, tank_y - 25, tbParam)
+	local tb_crawler_belt = Physics:CreateCrawlerBelt(cc_layer_main, tank_x, tank_y, physics_sprite_body, 50, tbParam)
 	if not tb_crawler_belt then
 		assert(false)
 		return
 	end
 
-	tb_ret.motor = tb_crawler_belt.motor
-	cc_layer_main:addChild(tb_crawler_belt.motor)
-	cc_layer_main:addChild(tb_crawler_belt.main_body, Def.ZOOM_LEVEL_WORLD)
-	cc_layer_main:addChild(tb_crawler_belt.wheel_back, Def.ZOOM_LEVEL_WORLD)
-	cc_layer_main:addChild(tb_crawler_belt.wheel_middle, Def.ZOOM_LEVEL_WORLD)
-	cc_layer_main:addChild(tb_crawler_belt.wheel_front, Def.ZOOM_LEVEL_WORLD)
-	for _, crawler in ipairs(tb_crawler_belt.tb_crawler) do
-		cc_layer_main:addChild(crawler, Def.ZOOM_LEVEL_WORLD)
-	end
+	local tb_property = {
+		mask_bits     = 0,
+	}
+	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", tank_x, tank_y, tb_property)
+	-- motor:setVisible(false)
+	cc_layer_main:addChild(motor)
+	tb_ret.motor = motor
 
-	-- local x, y = tb_crawler_belt.motor:getPosition()
-	-- local joint = PhysicsWorld:CreateDistanceJoint(
-	-- 	tb_crawler_belt.motor, 0, 0,
-	-- 	physics_sprite_body, 0, 0
-	-- )
-	-- assert(joint >= 0)
+	local joint_motor_body = PhysicsWorld:CreateRevoluteJoint(
+    	physics_sprite_body, 0, 0,
+    	motor, 0, 0
+    )
+    assert(joint_motor_body)
 
-	joint = PhysicsWorld:CreateDistanceJoint(
-		tb_crawler_belt.wheel_back, 0, 0,
-		physics_sprite_body, 0, 0
-	)
-	assert(joint >= 0)
+    local joint_motor_wheel_back = PhysicsWorld:CreateGearJoint(
+    	motor, tb_crawler_belt.wheel_back,
+    	joint_motor_body, tb_crawler_belt.tb_joint.wheel_back, 1
+    )
+    assert(joint_motor_wheel_back)
 
-	joint = PhysicsWorld:CreateDistanceJoint(
-		tb_crawler_belt.wheel_front, 0, 0,
-		physics_sprite_body, 0, 0
-	)
-	assert(joint >= 0)
+    local joint_motor_wheel_middle = PhysicsWorld:CreateGearJoint(
+    	motor, tb_crawler_belt.wheel_middle,
+    	joint_motor_body, tb_crawler_belt.tb_joint.wheel_middle, 1
+    )
+    assert(joint_motor_wheel_middle)
 
-	x, y = tb_crawler_belt.wheel_back:getPosition()
-	joint = PhysicsWorld:CreateDistanceJoint(
-		tb_crawler_belt.main_body, x - tank_x, 0,
-		physics_sprite_body, x - tank_x, 0
-	)
-	assert(joint >= 0)
-
-	x, y = tb_crawler_belt.wheel_front:getPosition()
-	joint = PhysicsWorld:CreateDistanceJoint(
-		tb_crawler_belt.main_body, x - tank_x, 0,
-		physics_sprite_body, x - tank_x, 0
-	)
-	assert(joint >= 0)
+    local joint_motor_wheel_front = PhysicsWorld:CreateGearJoint(
+    	motor, tb_crawler_belt.wheel_front,
+    	joint_motor_body, tb_crawler_belt.tb_joint.wheel_front, 1
+    )
+    assert(joint_motor_wheel_front)
 
     return tb_ret
 end
@@ -381,8 +361,10 @@ function Scene:OnButtonBegan(widget_button)
 	local str_button_name = widget_button:getName()
 	if str_button_name == "button_left" then
 		BattleLogic:StartMove("left")
+		self:SetFocus(1)
 	elseif str_button_name == "button_right" then
 		BattleLogic:StartMove("right")
+		self:SetFocus(1)
 	elseif str_button_name == "button_up" then
 		BattleLogic:StartAdjust("up")
 	elseif str_button_name == "button_down" then
@@ -398,8 +380,10 @@ function Scene:OnButtonEnded(widget_button)
 	local str_button_name = widget_button:getName()
 	if str_button_name == "button_left" then
 		BattleLogic:StopMove()
+		self:SetFocus(0)
 	elseif str_button_name == "button_right" then
 		BattleLogic:StopMove()
+		self:SetFocus(0)
 	elseif str_button_name == "button_up" then
 		BattleLogic:StopAdjust()
 	elseif str_button_name == "button_down" then
@@ -412,8 +396,10 @@ function Scene:OnButtonCanceled(widget_button)
 	local str_button_name = widget_button:getName()
 	if str_button_name == "button_left" then
 		BattleLogic:StopMove()
+		self:SetFocus(0)
 	elseif str_button_name == "button_right" then
 		BattleLogic:StopMove()
+		self:SetFocus(0)
 	elseif str_button_name == "button_up" then
 		BattleLogic:StopAdjust()
 	elseif str_button_name == "button_down" then
@@ -429,3 +415,43 @@ Scene.func_button_event = {
 	[Ui.TOUCH_EVENT_ENDED] = Scene.OnButtonEnded,
 	[Ui.TOUCH_EVENT_CANCELED] = Scene.OnButtonCanceled,
 }
+
+function Scene:OnBeBombed(bomb, target)
+	if target ~= self.tb_player.body or target ~= self.tb_enemy.body then
+		return
+	end
+	local bomb_x, bomb_y = bomb:getPosition()
+	local target_x, target_y = target:getPosition()
+
+	local vec_x, vec_y = target_x - bomb_x, target_y - bomb_y
+
+	local distance_squared = Lib:GetDistanceSquare(bomb_x, bomb_y, target_x, target_y)
+	local distance = math.sqrt(distance_squared)
+	local bomb_power_linear = bomb:GetLinearPower() / distance_squared
+	local impulse_x = bomb_power_linear * vec_x / distance
+	local impulse_y = bomb_power_linear * vec_y / distance
+	assert(PhysicsWorld:ApplyImpulse(target, impulse_x, impulse_y) == 1)
+
+	local angular_impulse = bomb:GetAngularPower() / distance_squared
+	if (vec_x > 0 and vec_y > 0) or (vec_x < 0 or vec_y < 0) then
+		angular_impulse = angular_impulse * -1
+	end
+	assert(PhysicsWorld:ApplyAngularImpulse(target, angular_impulse) == 1)
+
+	        -- b2Vec2 bomb_vec = ptr_b2body->GetPosition() - m_b2vec2_bomb_point;
+        -- float float_r2 = bomb_vec.LengthSquared();
+        -- float float_r = sqrt(float_r2);
+        -- float float_linear_impulse = m_float_power_linear / float_r2;
+        -- float float_impulse_x = float_linear_impulse * bomb_vec.x / float_r;
+        -- float float_impulse_y = float_linear_impulse * bomb_vec.y / float_r;
+        -- ptr_b2body->ApplyLinearImpulse(
+        --     b2Vec2(float_impulse_x, float_impulse_y),
+        --     ptr_b2body->GetPosition()
+        --     );
+        -- float float_angular_impulse = m_float_power_angular / float_r2;
+        -- if ((bomb_vec.x > 0.0f && bomb_vec.y > 0.0f) || (bomb_vec.x < 0.0f && bomb_vec.y < 0.0f))
+        -- {
+        --     float_angular_impulse *= -1;
+        -- }
+        -- ptr_b2body->ApplyAngularImpulse(float_angular_impulse);
+end

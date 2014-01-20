@@ -34,10 +34,10 @@ function BattleLogic:OnActive(num_frame)
 		if self.str_move_direction then
 			local motor = self.tb_player.motor
 			local torque = Def.MOTOR_POWER
-			if self.str_move_direction == "right" then
+			if self.str_move_direction == "left" then
 				torque = -torque
 			end
-			PhysicsWorld:ApplyTorque(motor, torque)
+			PhysicsWorld:SetBodyAngularVelocity(motor, torque)
 			Event:FireEvent("BodyMove", torque)
 		end
 	

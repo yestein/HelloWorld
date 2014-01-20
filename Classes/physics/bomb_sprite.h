@@ -21,7 +21,7 @@ public:
     ~BombSprite(){};
 
     virtual BOOL IsBomb() {return TRUE;};
-    BOOL OnBomb();
+    virtual BOOL OnBomb();
 
     BOOL Init(float power_linear, float power_angular, float radius)
     {

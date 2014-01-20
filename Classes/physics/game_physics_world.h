@@ -12,17 +12,17 @@ USING_NS_CC;
 
 #define PTM_RATIO 32
 #define CLIPPER_RATIO 1000
-#define MAX_JOINT_NUM 1000
 
 class GameSprite;
+class BombSprite;
 
 class BombCallback
 {
 public:
     virtual ~BombCallback() {}
 
-    virtual BOOL Collide(GameSprite* ptr_sprite) = 0;
-    virtual BOOL BeBombed(GameSprite* ptr_sprite) = 0;
+    virtual BOOL Bomb(GameSprite* ptr_sprite) = 0;
+    virtual BOOL BeBombed(BombSprite* ptr_bomb_sprite, GameSprite* ptr_sprite) = 0;
 };
 
 class GamePhysicsWorld : public b2ContactListener
@@ -41,13 +41,6 @@ public:
         float float_friction;
         float float_restitution;
     };
-
-    struct JOINT_NODE
-    {
-        b2Joint* ptr_joint;
-        int index_next;
-    };
-
     
 public:
 	GamePhysicsWorld():m_ptr_b2world(NULL) {};
@@ -60,7 +53,7 @@ public:
 		}
 		return ms_ptr_instance;
 	}
-	BOOL Init(float float_gravity_x, float float_gravity_y, int num_max_joint = MAX_JOINT_NUM);
+	BOOL Init(float float_gravity_x, float float_gravity_y);
 	BOOL Uninit();
 
     // Callbacks for derived classes.
@@ -146,7 +139,7 @@ public:
     );
 
     // 绑定有距线段关节
-    int CreateDistanceJoint(
+    b2Joint* CreateDistanceJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -160,7 +153,7 @@ public:
     );
 
     // 绑定焊接关节
-    int CreateWeldJoint(
+    b2Joint* CreateWeldJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -172,7 +165,7 @@ public:
     );
 
     // 绑定伸缩关节
-    int CreatePrismaticJoint(
+    b2Joint* CreatePrismaticJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -189,7 +182,7 @@ public:
     );
 
     // 绑定固定伸缩关节
-    int CreateFixedPrismaticJoint(
+    b2Joint* CreateFixedPrismaticJoint(
         GameSprite* ptr_sprite,
         float float_offset_anchor_x,
         float float_offset_anchor_y,
@@ -203,7 +196,7 @@ public:
     );    
 
     // 绑定旋转关节，注：角度单位为弧度制（π）
-    int CreateRevoluteJoint(
+    b2Joint* CreateRevoluteJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -219,7 +212,7 @@ public:
     );
 
     // 绑定固定旋转关节，注：角度单位为弧度制（π）
-    int CreateFixedRevoluteJoint(
+    b2Joint* CreateFixedRevoluteJoint(
         GameSprite* ptr_sprite,
         float float_offset_anchor_x,
         float float_offset_anchor_y,
@@ -231,7 +224,7 @@ public:
     );
 
     // 绑定车轮关节（与旋转关节的区别在于可以产生颠簸效果）
-    int CreateWheelJoint(
+    b2Joint* CreateWheelJoint(
         GameSprite* ptr_sprite_a,
         float float_offset_anchor_a_x,
         float float_offset_anchor_a_y,
@@ -248,29 +241,22 @@ public:
 
     
     // 绑定齿轮关节
-    int CreateGearJoint(
+    b2Joint* CreateGearJoint(
         GameSprite* ptr_sprite_a,
         GameSprite* ptr_sprite_b,
-        int joint_id_a,
-        int joint_id_b,
+        b2Joint* joint_a,
+        b2Joint* joint_b,
         float float_ratio
     );
-
-    BOOL DestoryJoint(int joint_id);    
     
     BOOL ApplyTorque(GameSprite* sprite, float torque);
     BOOL ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y);
     BOOL ApplyImpulseByAngular(GameSprite* sprite, float float_angular, float float_strength);
+    BOOL ApplyAngularImpulse(GameSprite* sprite, float impulse);
 
     BOOL Update(float float_delta);
     
-    BOOL Bomb(
-        float float_bomb_x,
-        float float_bomb_y, 
-        float float_power_linear,
-        float float_power_angular,
-        float float_bomb_radius
-    );
+    BOOL Bomb(BombSprite* bomb_sprite);
 
     BOOL MouseDown(float float_x, float float_y);
     void MouseUp(float float_x, float float_y);
@@ -289,17 +275,12 @@ public:
 private:
 
     BOOL processCollide();
-    int addJoint(b2Joint* ptr_joint);
-    b2Joint* getJoint(int joint_id);
     BOOL getPolygonFormBody(b2Fixture* ptr_b2fixture, ClipperLib::Paths* ptr_clipper_paths);
     BOOL getClipperCircle(float float_radius, int int_precision, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y);
     BOOL getPolygonFromCache(const std::string &shape_name, ClipperLib::Paths* ptr_clipper_paths, float float_offset_x, float float_offset_y);
 private:
 	static GamePhysicsWorld* ms_ptr_instance;
     CollideVector m_array_collide;
-    JOINT_NODE* m_ptr_pool_joint;
-    int m_int_index_free;
-    int m_int_used;
 	b2World* m_ptr_b2world;
 
     b2Vec2 m_b2vec_mouse_position;

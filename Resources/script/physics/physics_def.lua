@@ -22,3 +22,5 @@ local tb = {
 	frontwheel = {"tank_wheel.png", 30, -10},
 	backwheel = {"tank_wheel.png"},
 }
+
+Physics.MASK_GROUND = 0x0001

@@ -10,7 +10,7 @@ GamePhysicsWorld* GamePhysicsWorld::ms_ptr_instance = NULL;
 USING_NS_CC;
 using namespace ClipperLib;
 
-BOOL GamePhysicsWorld::Init(float float_gravity_x, float float_gravity_y, int num_max_joint)
+BOOL GamePhysicsWorld::Init(float float_gravity_x, float float_gravity_y)
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
@@ -29,19 +29,6 @@ BOOL GamePhysicsWorld::Init(float float_gravity_x, float float_gravity_y, int nu
 
         m_ptr_b2joint_mouse = NULL;
         m_ptr_bomb_callback = NULL;
-        m_ptr_pool_joint = (JOINT_NODE*)malloc(sizeof(JOINT_NODE) * num_max_joint);
-        KGLOG_PROCESS_ERROR(m_ptr_pool_joint);
-        for(int i = 0; i < num_max_joint; i++)
-        {
-            m_ptr_pool_joint[i].ptr_joint = NULL;
-            m_ptr_pool_joint[i].index_next = i + 1;
-            if (m_ptr_pool_joint[i].index_next == num_max_joint)
-            {
-                m_ptr_pool_joint[i].index_next = -1;
-            }
-        }
-        m_int_index_free = 0;
-        m_int_used = 0;
     }
 
 	num_result = TRUE;
@@ -49,7 +36,6 @@ Exit0:
     if (!num_result)
     {
         SAFE_DELETE(m_ptr_b2world);
-        SAFE_FREE(m_ptr_pool_joint);
     }
 	return num_result;
 }
@@ -60,7 +46,6 @@ BOOL GamePhysicsWorld::Uninit()
     int num_ret_code = FALSE;
 
     SAFE_DELETE(m_ptr_b2world);
-    SAFE_FREE(m_ptr_pool_joint);
 Exit0:
     return num_result;
 }
@@ -163,19 +148,16 @@ BOOL GamePhysicsWorld::processCollide()
             if(ptr_sprite->IsBomb())
             {
                 BombSprite* ptr_bomb_sprite = (BombSprite*)ptr_sprite;
-                Point bomb_postion = ptr_bomb_sprite->getPosition();
-                float float_power_linear = ptr_bomb_sprite->GetLinearPower();
-                float float_power_angular = ptr_bomb_sprite->GetAngularPower();
                 float float_bomb_radius = ptr_bomb_sprite->GetBombRadius();
                 // 这里利用爆炸半径来做一个爆炸物理效果开关
                 if (float_bomb_radius > 0.0f)
                 {
-                    num_ret_code = Bomb(bomb_postion.x, bomb_postion.y, float_power_linear, float_power_angular, float_bomb_radius);
+                    num_ret_code = Bomb(ptr_bomb_sprite);
                     KGLOG_PROCESS_ERROR(num_ret_code);
                 }
                 if (m_ptr_bomb_callback)
                 {
-                    m_ptr_bomb_callback->Collide(ptr_sprite);
+                    m_ptr_bomb_callback->Bomb(ptr_sprite);
                 }
             }                   
         }
@@ -187,85 +169,27 @@ Exit0:
 	return num_result;
 }
 
-BOOL GamePhysicsWorld::Bomb(
-    float float_bomb_x,
-    float float_bomb_y, 
-    float float_power_linear,
-    float float_power_angular,
-    float float_bomb_radius
-)
+BOOL GamePhysicsWorld::Bomb(BombSprite* bomb_sprite)
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
-
-    b2Vec2 p(float_bomb_x / PTM_RATIO, float_bomb_y / PTM_RATIO);
+    float bomb_radius = bomb_sprite->GetBombRadius();
+    float bomb_x = bomb_sprite->getPositionX();
+    float bomb_y = bomb_sprite->getPositionY();
+    b2Vec2 p(bomb_x / PTM_RATIO, bomb_y / PTM_RATIO);
     // Make a small box.
     b2AABB aabb;
     b2Vec2 d;
-    d.Set(float_bomb_radius / PTM_RATIO, float_bomb_radius / PTM_RATIO);
+    d.Set(bomb_radius / PTM_RATIO, bomb_radius / PTM_RATIO);
     aabb.lowerBound = p - d;
     aabb.upperBound = p + d;
-    PhysicsBomb bomb(
-        float_bomb_x / PTM_RATIO,
-        float_bomb_y / PTM_RATIO,
-        float_power_linear,
-        float_power_angular,
-        float_bomb_radius / PTM_RATIO,
-        m_ptr_bomb_callback
-    );
+    PhysicsBomb bomb(bomb_sprite, m_ptr_bomb_callback);
     m_ptr_b2world->QueryAABB(&bomb, aabb);
     num_ret_code = bomb.ProcessBomb();
     KGLOG_PROCESS_ERROR(num_ret_code);
 	num_result = TRUE;
 Exit0:
 	return num_result;
-}
-
-
-
-int GamePhysicsWorld::addJoint(b2Joint* ptr_joint)
-{
-	int joint_id = -1;
-	int num_ret_code = FALSE;
-
-    KGLOG_PROCESS_ERROR(m_int_index_free >= 0);
-
-    joint_id = m_int_index_free;
-    m_ptr_pool_joint[m_int_index_free].ptr_joint = ptr_joint;
-    m_int_index_free = m_ptr_pool_joint[m_int_index_free].index_next;
-	m_int_used++;
-Exit0:
-	return joint_id;
-}
-
-BOOL GamePhysicsWorld::DestoryJoint(int joint_id)
-{
-	int num_result = FALSE;
-	int num_ret_code = FALSE;
-
-    b2Joint* ptr_b2joint = getJoint(joint_id);
-    KGLOG_PROCESS_ERROR(ptr_b2joint);
-	m_ptr_b2world->DestroyJoint(ptr_b2joint);
-
-    m_ptr_pool_joint[joint_id].ptr_joint = NULL;
-    m_ptr_pool_joint[joint_id].index_next = m_int_index_free;
-    m_int_index_free = joint_id;
-    
-    m_int_used--;
-	num_result = TRUE;
-Exit0:
-	return num_result;
-}
-b2Joint* GamePhysicsWorld::getJoint(int joint_id)
-{
-    b2Joint* ptr_b2joint = NULL;
-
-    KGLOG_PROCESS_ERROR(joint_id >= 0);
-    KGLOG_PROCESS_ERROR(joint_id < MAX_JOINT_NUM);
-
-    ptr_b2joint = m_ptr_pool_joint[joint_id].ptr_joint;
-Exit0:
-    return ptr_b2joint;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -664,7 +588,7 @@ Exit0:
 	return num_result;
 }
 
-int GamePhysicsWorld::CreatePrismaticJoint(
+b2Joint* GamePhysicsWorld::CreatePrismaticJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
     float float_offset_anchor_a_y,
@@ -680,7 +604,6 @@ int GamePhysicsWorld::CreatePrismaticJoint(
     float float_max_motor_force
 )
 {
-	int joint_id = -1;
 	int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -714,14 +637,12 @@ int GamePhysicsWorld::CreatePrismaticJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-	return joint_id;
+	return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateFixedPrismaticJoint(
+b2Joint* GamePhysicsWorld::CreateFixedPrismaticJoint(
     GameSprite* ptr_sprite,
     float float_offset_anchor_x,
     float float_offset_anchor_y,
@@ -734,7 +655,6 @@ int GamePhysicsWorld::CreateFixedPrismaticJoint(
     float float_max_motor_force
     )
 {
-    int joint_id = -1;
     int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -763,14 +683,12 @@ int GamePhysicsWorld::CreateFixedPrismaticJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateDistanceJoint(
+b2Joint* GamePhysicsWorld::CreateDistanceJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
     float float_offset_anchor_a_y,
@@ -783,10 +701,9 @@ int GamePhysicsWorld::CreateDistanceJoint(
     BOOL bool_collide_connected
 )
 {
-    int joint_id = -1;
-    int num_ret_code = FALSE;
-
     b2Joint* ptr_b2joint = NULL;
+    int num_ret_code = FALSE;
+    
     b2Body* ptr_b2body_a = NULL;
     b2Body* ptr_b2body_b = NULL;
 
@@ -819,14 +736,12 @@ int GamePhysicsWorld::CreateDistanceJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateWeldJoint(
+b2Joint* GamePhysicsWorld::CreateWeldJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
     float float_offset_anchor_a_y,
@@ -837,7 +752,6 @@ int GamePhysicsWorld::CreateWeldJoint(
     float float_damping_ratio
 )
 {
-    int joint_id = -1;
     int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -864,14 +778,12 @@ int GamePhysicsWorld::CreateWeldJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateRevoluteJoint(
+b2Joint* GamePhysicsWorld::CreateRevoluteJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
     float float_offset_anchor_a_y,
@@ -886,7 +798,6 @@ int GamePhysicsWorld::CreateRevoluteJoint(
     BOOL bool_collide_connected
  )
 {
-    int joint_id = -1;
     int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -918,14 +829,12 @@ int GamePhysicsWorld::CreateRevoluteJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateFixedRevoluteJoint(
+b2Joint* GamePhysicsWorld::CreateFixedRevoluteJoint(
     GameSprite* ptr_sprite,
     float float_offset_anchor_x,
     float float_offset_anchor_y,
@@ -936,7 +845,6 @@ int GamePhysicsWorld::CreateFixedRevoluteJoint(
     float float_max_motor_torque
 )
 {
-    int joint_id = -1;
     int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -962,14 +870,12 @@ int GamePhysicsWorld::CreateFixedRevoluteJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateWheelJoint(
+b2Joint* GamePhysicsWorld::CreateWheelJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
     float float_offset_anchor_a_y,
@@ -984,7 +890,6 @@ int GamePhysicsWorld::CreateWheelJoint(
     float float_max_motor_torque
     )
 {
-    int joint_id = -1;
     int num_ret_code = FALSE;
 
     b2Joint* ptr_b2joint = NULL;
@@ -1015,43 +920,34 @@ int GamePhysicsWorld::CreateWheelJoint(
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
-
-        joint_id = addJoint(ptr_b2joint);
     }
 Exit0:
-    return joint_id;
+    return ptr_b2joint;
 }
 
-int GamePhysicsWorld::CreateGearJoint(
+b2Joint* GamePhysicsWorld::CreateGearJoint(
     GameSprite* ptr_sprite_a,
     GameSprite* ptr_sprite_b,
-    int joint_id_a,
-    int joint_id_b,
+    b2Joint* ptr_b2joint_a,
+    b2Joint* ptr_b2joint_b,
     float float_ratio
 )
 {
-    int joint_id_gear = -1;
     int num_ret_code = FALSE;
     b2Joint* ptr_b2joint_gear = NULL;
-    b2Joint* ptr_b2joint_a = NULL;
-    b2Joint* ptr_b2joint_b = NULL;
     b2Body* ptr_b2body_a = NULL;
     b2Body* ptr_b2body_b = NULL;
 
     KGLOG_PROCESS_ERROR(ptr_sprite_a);
     KGLOG_PROCESS_ERROR(ptr_sprite_b);
+    KGLOG_PROCESS_ERROR(ptr_b2joint_a);
+    KGLOG_PROCESS_ERROR(ptr_b2joint_b);
 
     ptr_b2body_a = ptr_sprite_a->GetB2Body();
     KGLOG_PROCESS_ERROR(ptr_b2body_a);
 
     ptr_b2body_b = ptr_sprite_b->GetB2Body();
     KGLOG_PROCESS_ERROR(ptr_b2body_b);
-
-    ptr_b2joint_a = getJoint(joint_id_a);
-    KGLOG_PROCESS_ERROR(ptr_b2joint_a);
-
-    ptr_b2joint_b = getJoint(joint_id_b);
-    KGLOG_PROCESS_ERROR(ptr_b2joint_b);
     {
         b2GearJointDef jd;
         jd.bodyA = ptr_b2body_a;
@@ -1062,11 +958,9 @@ int GamePhysicsWorld::CreateGearJoint(
 
         ptr_b2joint_gear = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint_gear);
-
-        joint_id_gear = addJoint(ptr_b2joint_gear);
     }
 Exit0:
-    return joint_id_gear;
+    return ptr_b2joint_gear;
 }
 
 BOOL GamePhysicsWorld::ApplyTorque(GameSprite* sprite, float torque)
@@ -1122,6 +1016,25 @@ BOOL GamePhysicsWorld::ApplyImpulseByAngular(GameSprite* sprite, float float_ang
     float float_impulse_x = float_strength * cos(CC_DEGREES_TO_RADIANS(float_angular));
     float float_impulse_y = float_strength * sin(CC_DEGREES_TO_RADIANS(float_angular));
     ptr_b2body->ApplyLinearImpulse(b2Vec2(float_impulse_x / PTM_RATIO, float_impulse_y / PTM_RATIO), ptr_b2body->GetPosition());
+
+    num_result = TRUE;
+Exit0:
+    return num_result;
+}
+
+BOOL GamePhysicsWorld::ApplyAngularImpulse(GameSprite* sprite, float impulse)
+{
+    int num_result = FALSE;
+    int num_ret_code = FALSE;
+
+    b2Body* ptr_b2body = NULL;
+
+    KGLOG_PROCESS_ERROR(sprite);
+
+    ptr_b2body = sprite->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body);
+
+    ptr_b2body->ApplyAngularImpulse(impulse);
 
     num_result = TRUE;
 Exit0:
