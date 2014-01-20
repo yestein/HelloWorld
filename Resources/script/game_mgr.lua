@@ -37,38 +37,14 @@ function GameMgr:GetCurrentFrame()
 	return self.num_frame
 end
 
-function GameMgr:StartNormalScene(szSceneName)
-    -- run
-    local tbVisibleSize = CCDirector:getInstance():getVisibleSize()
-	local tb_scene = SceneMgr:GetScene(szSceneName)
-	if not tb_scene then
-		tb_scene = SceneMgr:CreateScene(szSceneName, szSceneName)
-		assert(tb_scene)
-	end
-	local cc_scene = tb_scene:GetCCObj()
-	assert(cc_scene)
-	
-	CCDirector:getInstance():pushScene(cc_scene)
-end
-
-function GameMgr:StartPhysicsScene(szSceneName, z_level_debug_layer)
+function GameMgr:LoadScene(szSceneName)
     local tb_scene = SceneMgr:GetScene(szSceneName)
     if not tb_scene then
 		tb_scene = SceneMgr:CreateScene(szSceneName, szSceneName)
-	    if _DEBUG then
-	    	local layer_main = tb_scene:GetLayer("main")
-	        local layer_debug_phyiscs = DebugPhysicsLayer:create()
-	        if z_level_debug_layer then 
-				if z_level_debug_layer > 0 then
-					layer:addChild(layer_debug_phyiscs, z_level_debug_layer)
-				end
-			else
-				layer_main:addChild(layer_debug_phyiscs)
-			end
-	    end
 	end
 	local cc_scene = tb_scene:GetCCObj()
 	CCDirector:getInstance():pushScene(cc_scene)
+	return tb_scene
 end
 
 function GameMgr:TestCocoStudio()
@@ -79,7 +55,7 @@ function GameMgr:TestCocoStudio()
 	local cc_layer = tb_scene:GetLayer("main")
 	assert(cc_layer)
 
-	local uilayer_control = Ui:LoadJson(cc_layer, "control/control.ExportJson")
+	local uilayer_control = Ui:LoadJson(cc_layer, "ui/control/control.ExportJson")
 	assert(uilayer_control)
 	self.uilayer_control = uilayer_control
 	local function OnButtonEvent(widget_button, event)

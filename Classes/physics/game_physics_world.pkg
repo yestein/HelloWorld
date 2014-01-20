@@ -15,11 +15,12 @@ public:
 	int SetGravity(float float_gravity_x, float float_gravity_y);
 
 	int CreateRectEdge(
-		float float_left,
-		float float_right, 
-		float float_buttom,
-		float float_top
-	);
+        GameSprite* ptr_sprite,
+        float float_left,
+        float float_right, 
+        float float_buttom,
+        float float_top
+    );
 
     int SetBoxBody(
         GameSprite* ptr_sprite, 
@@ -29,8 +30,12 @@ public:
         float float_offset_x,
         float float_offset_y,
         int bool_dynamic,
-        int bool_is_bullet = 0
+        int bool_is_bullet = 0,
+        int groupIndex = 0,
+        int categoryBits = 0x0001,
+        int maskBits = 0xFFFF
     );
+
 
     int SetCircleBody(GameSprite* ptr_sprite, 
         float float_radius,
@@ -38,7 +43,10 @@ public:
         float float_offset_x,
         float float_offset_y,
         int bool_dynamic,
-        int bool_is_bullet = 0
+        int bool_is_bullet = 0,
+        int groupIndex = 0,
+        int categoryBits = 0x0001,
+        int maskBits = 0xFFFF
     );
 
     int SetBodyAngularVelocity(GameSprite* ptr_sprite, float float_velocity);
@@ -65,6 +73,18 @@ public:
         float float_frequency_hz = 0.0f,
         float float_damping_ratio = 0.0f,
 		int bool_collide_connected = 0
+    );
+
+	// 绑定焊接关节
+    int CreateWeldJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        float float_frequency_hz = 0.0f,
+        float float_damping_ratio = 0.0f
     );
 
     // 绑定伸缩关节
@@ -110,7 +130,8 @@ public:
         float float_lower_angle = 0.0f,
         float float_upper_angle = 0.0f,
         float float_motor_speed = 0.0f,
-        float float_max_motor_torque = 0.0f
+        float float_max_motor_torque = 0.0f,
+		int bool_collide_connected = 0
     );
 
     // 绑定固定旋转关节，注：角度单位为弧度制（π）
@@ -153,6 +174,7 @@ public:
 
     int DestoryJoint(int joint_id);    
 
+	int ApplyTorque(GameSprite* sprite, float torque);
     int ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y);
     int ApplyImpulseByAngular(GameSprite* sprite, float float_angular, float float_strength);
 

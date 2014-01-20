@@ -21,7 +21,7 @@ class BombCallback
 public:
     virtual ~BombCallback() {}
 
-    virtual BOOL Bomb(float float_bomb_x, float float_bomb_y) = 0;
+    virtual BOOL Collide(GameSprite* ptr_sprite) = 0;
     virtual BOOL BeBombed(GameSprite* ptr_sprite) = 0;
 };
 
@@ -86,6 +86,7 @@ public:
     }
 
     BOOL CreateRectEdge(
+        GameSprite* ptr_sprite,
         float float_left,
         float float_right, 
         float float_buttom,
@@ -100,8 +101,12 @@ public:
         float float_offset_x,
         float float_offset_y,
         BOOL bool_dynamic,
-        BOOL bool_is_bullet = 0
+        BOOL bool_is_bullet = 0,
+        uint16 groupIndex = 0,
+        uint16 categoryBits = 0x0001,
+        uint16 maskBits = 0xFFFF
     );
+
 
     BOOL SetCircleBody(GameSprite* ptr_sprite, 
         float float_radius,
@@ -109,7 +114,10 @@ public:
         float float_offset_x,
         float float_offset_y,
         BOOL bool_dynamic,
-        BOOL bool_is_bullet = 0
+        BOOL bool_is_bullet = 0,
+        uint16 groupIndex = 0,
+        uint16 categoryBits = 0x0001,
+        uint16 maskBits = 0xFFFF
     );
 
     BOOL SetShapeBody(
@@ -119,7 +127,10 @@ public:
         float float_offset_x,
         float float_offset_y,
         BOOL bool_dynamic,
-        BOOL bool_is_bullet = 0
+        BOOL bool_is_bullet,
+        uint16 group_index,
+        uint16 category_bits,
+        uint16 mask_bits
     );
 
     BOOL SetBodyAngularVelocity(GameSprite* ptr_sprite, float float_velocity);
@@ -146,6 +157,18 @@ public:
         float float_frequency_hz = 0.0f,
         float float_damping_ratio = 0.0f,
         BOOL bool_collide_connected = 0
+    );
+
+    // 绑定焊接关节
+    int CreateWeldJoint(
+        GameSprite* ptr_sprite_a,
+        float float_offset_anchor_a_x,
+        float float_offset_anchor_a_y,
+        GameSprite* ptr_sprite_b,
+        float float_offset_anchor_b_x,
+        float float_offset_anchor_b_y,
+        float float_frequency_hz = 0.0f,
+        float float_damping_ratio = 0.0f
     );
 
     // 绑定伸缩关节
@@ -191,7 +214,8 @@ public:
         float float_lower_angle = 0.0f,
         float float_upper_angle = 0.0f,
         float float_motor_speed = 0.0f,
-        float float_max_motor_torque = 0.0f
+        float float_max_motor_torque = 0.0f,
+        BOOL bool_collide_connected = 0
     );
 
     // 绑定固定旋转关节，注：角度单位为弧度制（π）
@@ -233,7 +257,8 @@ public:
     );
 
     BOOL DestoryJoint(int joint_id);    
-
+    
+    BOOL ApplyTorque(GameSprite* sprite, float torque);
     BOOL ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y);
     BOOL ApplyImpulseByAngular(GameSprite* sprite, float float_angular, float float_strength);
 

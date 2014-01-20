@@ -33,7 +33,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "运行Demo",
                 fnCallBack = function()
-                    GameMgr:StartPhysicsScene("DemoScene", -1)
+                    GameMgr:LoadScene("DemoScene")
                 end,
             },
         },
@@ -41,7 +41,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "物理引擎测试",
                 fnCallBack = function()
-                    GameMgr:StartPhysicsScene("PhysicsScene")
+                    GameMgr:LoadScene("PhysicsScene")
                 end,
             },
         },
@@ -57,7 +57,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "弹坑测试（包含物理破坏）",
                 fnCallBack = function()
-                    GameMgr:StartPhysicsScene("PolygonBreak")
+                    GameMgr:LoadScene("PolygonBreak")
                 end,
             },
         },
@@ -65,7 +65,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "机械构建测试",
                 fnCallBack = function()
-                    GameMgr:StartPhysicsScene("ConstructScene")
+                    GameMgr:LoadScene("ConstructScene")
                 end,
             },
         },

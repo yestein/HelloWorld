@@ -6,10 +6,13 @@
 --===================================================
 
 local Scene = SceneMgr:GetClass("DemoScene", 1)
-Scene.can_touch = 1 --可接受触摸事件
-Scene.can_pick = 1 --可用鼠标拖拽物理刚体
-Scene.can_drag = 1 --可拖拽屏幕
-Scene.limit_drag = 1 --拖拽屏幕是否受限制（仅在场景范围内拖拽）
+Scene.tb_property = {
+	can_touch     = 1,--可接受触摸事件
+	can_pick      = 1,--可用鼠标拖拽物理刚体
+	can_drag      = 1,--可拖拽屏幕
+	limit_drag    = 1,--拖拽屏幕是否受限制（仅在场景范围内拖拽）
+	debug_physics = 1, --是否显示物理引擎调试绘制
+}
 
 Scene:DeclareListenEvent("Bomb", "OnBomb")
 Scene:DeclareListenEvent("WeaponRotate", "OnWeaponRotate")
@@ -17,6 +20,7 @@ Scene:DeclareListenEvent("PowerChanged", "OnPowerChanged")
 Scene:DeclareListenEvent("Attack", "OnAttack")
 
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
+local tb_size_visible = CCDirector:getInstance():getVisibleSize()
 
 function Scene:_Uninit()
 	BattleLogic:Uninit()
@@ -24,7 +28,6 @@ end
 
 function Scene:_Init()
 	local num_ret_code = 0
-	local tb_size_visible = CCDirector:getInstance():getVisibleSize()
 	local width_visible = tb_size_visible.width
 	local height_visible = tb_size_visible.height
 
@@ -37,11 +40,25 @@ function Scene:_Init()
     	str_body = "tank",
     	str_weapon = "tank_weapon",
 	}
-    self.tb_player = self:BuildTank(200, 425, tb_param)
-    self.tb_enemy = self:BuildTank(796, 409, tb_param)
+	local width_scene = self:GetWidth()
+    self.tb_player = self:BuildTank(100, 100, tb_param)
+    self.tb_enemy = self:BuildTank(width_scene / 2 + 300, 418, tb_param)
+
+    local x, y = self.tb_player.body:getPosition()
+	self:MoveCamera(x, y)
 
     BattleLogic:Init(self.tb_player, self.tb_enemy)
     return 1
+end
+
+function Scene:OnLoop(delta)
+	if self.physics_sprite_bullet then
+		local x, y = self.physics_sprite_bullet:getPosition()
+		self:MoveCamera(x, y)
+	-- elseif self.tb_player.body then
+	-- 	local x, y = self.tb_player.body:getPosition()
+	-- 	self:MoveCamera(x, y)
+	end	
 end
 
 function Scene:OnClick(x, y)
@@ -53,9 +70,23 @@ function Scene:CreateMap()
 	local width_scene = 0    
     local height_scene = 0
 
+    local physics_sprite_background = GameSprite:create("image/background.png")
+    local rect_raw_background = physics_sprite_background:getTextureRect()
+    physics_sprite_background:setAnchorPoint(cc.p(0, 0))
+   
+    width_scene = rect_raw_background.width
+    height_scene = rect_raw_background.height
+
+    num_ret_code = PhysicsWorld:CreateRectEdge(physics_sprite_background, 0, width_scene, 0, height_scene)
+    assert(num_ret_code == 1)
+
+    self:SetWidth(width_scene)
+	self:SetHeight(height_scene)
+	cc_layer_main:addChild(physics_sprite_background)
+
     local physics_sprite_ground = GameSprite:create(Def.str_ground_img)
 	local rect_map = physics_sprite_ground:getTextureRect()
-    local position_x = rect_map.width * 0.5
+    local position_x = width_scene * 0.5
     local position_y = rect_map.height * 0.5
     physics_sprite_ground:setPosition(position_x, position_y)
     self:SetGroundSprite(physics_sprite_ground)
@@ -84,22 +115,7 @@ function Scene:CreateMap()
 
     cc_layer_main:addChild(cc_clipping_background, Def.ZOOM_LEVEL_WORLD)
     cc_clipping_background:addChild(cc_clipping_map_ground)
-    cc_clipping_map_ground:addChild(physics_sprite_ground)
-	
-	local cc_sprite_background = cc.Sprite:create("image/background.png")
-    local rect_raw_background = cc_sprite_background:getTextureRect()
-    cc_sprite_background:setAnchorPoint(cc.p(0, 0))
-    
-    width_scene = rect_raw_background.width
-    height_scene = rect_raw_background.height
-
-    self:SetWidth(width_scene)
-	self:SetHeight(height_scene)
-
-	cc_layer_main:addChild(cc_sprite_background)
-
-	num_ret_code = PhysicsWorld:CreateRectEdge(0, width_scene, 0, height_scene)
-    assert(num_ret_code == 1)
+    cc_clipping_map_ground:addChild(physics_sprite_ground)	
 end
 
 function Scene:BuildTank(tank_x, tank_y, tb_param)
@@ -121,8 +137,8 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 	    local cc_sprite_weapon = GameSprite:create(string.format("image/%s.png", str_weapon))
 	    local width_weapon = cc_sprite_weapon:getContentSize().width * 0.5
 	    local height_weapon = cc_sprite_weapon:getContentSize().height * 0.5
-	    local weapon_x = 15;
-	    local weapon_y = 40;
+	    local weapon_x = 15
+	    local weapon_y = 40
 	    cc_sprite_weapon:setAnchorPoint(cc.p(5 / width_weapon, 0.5))
 	    cc_sprite_weapon:setPosition(weapon_x, weapon_y)
 	    cc_sprite_weapon:setRotation(-45)
@@ -149,6 +165,59 @@ function Scene:BuildTank(tank_x, tank_y, tb_param)
 		tb_ret.weapon = cc_sprite_weapon
 	end
 
+	local tbParam = {
+		str_main_body = "image/rect3.png",
+		str_wheel = "image/tank_wheel.png",
+	}
+	local tb_crawler_belt = Physics:CreateCrawlerBelt(tank_x, tank_y - 25, tbParam)
+	if not tb_crawler_belt then
+		assert(false)
+		return
+	end
+
+	tb_ret.motor = tb_crawler_belt.motor
+	cc_layer_main:addChild(tb_crawler_belt.motor)
+	cc_layer_main:addChild(tb_crawler_belt.main_body, Def.ZOOM_LEVEL_WORLD)
+	cc_layer_main:addChild(tb_crawler_belt.wheel_back, Def.ZOOM_LEVEL_WORLD)
+	cc_layer_main:addChild(tb_crawler_belt.wheel_middle, Def.ZOOM_LEVEL_WORLD)
+	cc_layer_main:addChild(tb_crawler_belt.wheel_front, Def.ZOOM_LEVEL_WORLD)
+	for _, crawler in ipairs(tb_crawler_belt.tb_crawler) do
+		cc_layer_main:addChild(crawler, Def.ZOOM_LEVEL_WORLD)
+	end
+
+	-- local x, y = tb_crawler_belt.motor:getPosition()
+	-- local joint = PhysicsWorld:CreateDistanceJoint(
+	-- 	tb_crawler_belt.motor, 0, 0,
+	-- 	physics_sprite_body, 0, 0
+	-- )
+	-- assert(joint >= 0)
+
+	joint = PhysicsWorld:CreateDistanceJoint(
+		tb_crawler_belt.wheel_back, 0, 0,
+		physics_sprite_body, 0, 0
+	)
+	assert(joint >= 0)
+
+	joint = PhysicsWorld:CreateDistanceJoint(
+		tb_crawler_belt.wheel_front, 0, 0,
+		physics_sprite_body, 0, 0
+	)
+	assert(joint >= 0)
+
+	x, y = tb_crawler_belt.wheel_back:getPosition()
+	joint = PhysicsWorld:CreateDistanceJoint(
+		tb_crawler_belt.main_body, x - tank_x, 0,
+		physics_sprite_body, x - tank_x, 0
+	)
+	assert(joint >= 0)
+
+	x, y = tb_crawler_belt.wheel_front:getPosition()
+	joint = PhysicsWorld:CreateDistanceJoint(
+		tb_crawler_belt.main_body, x - tank_x, 0,
+		physics_sprite_body, x - tank_x, 0
+	)
+	assert(joint >= 0)
+
     return tb_ret
 end
 
@@ -166,15 +235,23 @@ function Scene:LoadControlUI()
 			func(self, widget_button)
 		end
 	end
+	self.tb_widget = {}
 	local tb_button_list = {"button_left", "button_right", "button_up", "button_down", "button_luanch"}
 	for _, str_button_name in ipairs(tb_button_list) do
 		local button = uilayer_control:getWidgetByName(str_button_name)
 		if button then
+			self.tb_widget[#self.tb_widget + 1] = button
 			button:addTouchEventListener(OnButtonEvent)
 		else
 			print(str_button_name)
 			assert(false)
 		end
+	end
+end
+
+function Scene:SetUIEnable(enable)
+	for _, widget in ipairs(self.tb_widget) do
+		widget:setEnabled(enable)
 	end
 end
 
@@ -209,24 +286,18 @@ function Scene:OnPowerChanged(power)
 end
 
 function Scene:OnAttack(power)
-	local progressbar_power = self.uilayer_control:getWidgetByName("progressbar_power")
-	if not progressbar_power then
-		assert(false)
-		return
-	end	
-	local label_power = self.uilayer_control:getWidgetByName("label_power")
-	if not label_power then
-		assert(false)
-		return
-	end	
+	self.uilayer_control:setVisible(false)
+	self:SetUIEnable(false)
 
 	local cc_layer_main = self:GetLayer("main")
-    local material = GamePhysicsWorld.MATERIAL:new(4, 0, 0)
+    local material = GamePhysicsWorld.MATERIAL:new(Def.BULLET_DENSITY, 0, 0.5)
+
+	assert(not self.physics_sprite_bullet)
 
     local physics_sprite_bullet = BombSprite:create("image/bullet.png")
     local float_scale = 1
     local float_bullet_radius = physics_sprite_bullet:getContentSize().width * 0.25 * float_scale
-    physics_sprite_bullet:Init(250, 500, 80)
+    physics_sprite_bullet:Init(Def.BULLET_POWER_LINERAR, Def.BULLET_POWER_ANGULAR, Def.BULLET_BOMB_RANGE)
 
     local weapon = self.tb_player.weapon
     local body = self.tb_player.body
@@ -241,7 +312,9 @@ function Scene:OnAttack(power)
         material, 0, 0, 1, 1)
 
     PhysicsWorld:SetBodyAngularVelocity(physics_sprite_bullet, 2)
-    PhysicsWorld:ApplyImpulseByAngular(physics_sprite_bullet, -weapon:getRotation(), 100 + power * 10);
+    local impulse = BattleLogic:GetBulletPower(power)
+    PhysicsWorld:ApplyImpulseByAngular(physics_sprite_bullet, -weapon:getRotation(), impulse);
+    self.physics_sprite_bullet = physics_sprite_bullet
 end
 
 function Scene:SetGroundSprite(ground)
@@ -252,7 +325,45 @@ function Scene:GetGroundSprite()
 	return self.physics_sprite_ground
 end
 
-function Scene:OnBomb(float_bomb_x, float_bomb_y)
+function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
+	local cc_layer_main = self:GetLayer("main")
+	local bomb_sprite = cc.Sprite:create("image/bomb.png")
+    bomb_sprite:setPosition(float_bomb_x, float_bomb_y)
+    cc_layer_main:addChild(bomb_sprite, Def.ZOOM_LEVEL_WORLD)
+    bomb_sprite:setScale(0.05)
+
+   	local action_scale = cc.ScaleTo:create(0.05, 1.0)
+    local action_delay_time = cc.DelayTime:create(0.5)
+    local action_remove_self = cc.RemoveSelf:create()
+    bomb_sprite:runAction(cc.Sequence:create(action_scale, action_delay_time, action_remove_self))
+
+    function RecoverUI()
+		self.uilayer_control:setVisible(true)
+		self:SetUIEnable(true)
+	end
+	
+	local action_move_left = cc.MoveBy:create(0.02, cc.p(-3, 0))
+	local action_move_right = cc.MoveBy:create(0.02, cc.p(3, 0))
+	local action_delay_time = cc.DelayTime:create(1)
+	local x, y = self.tb_player.body:getPosition()
+	local modify_x, modify_y = self:GetModifyPosition(tb_size_visible.width / 2 - x, tb_size_visible.height / 2 - y)
+	local action_move_to = cc.MoveTo:create(0.5, cc.p(modify_x, modify_y))
+	local action_callback = cc.CallFunc:create(RecoverUI)
+	local sequence_actions = cc.Sequence:create(
+		action_move_left,
+		action_move_right,
+		action_move_right,
+		action_move_left,
+		action_move_left, 
+		action_move_right,
+		action_delay_time,
+		action_move_to,
+		action_callback
+	)
+	cc_layer_main:runAction(sequence_actions)
+    cc_layer_main:removeChild(sprite_bullet)
+    self.physics_sprite_bullet = nil
+
 	local ground = self:GetGroundSprite()
 	local num_ret_code = PhysicsWorld:ClipperPolygonByCircle(ground, 30, 20, float_bomb_x, float_bomb_y)
 	if num_ret_code == 1 then

@@ -10,7 +10,9 @@ require("script/define.lua")
 require("script/misc_math.lua")
 require("script/lib.lua")
 require("script/event.lua")
+if _DEBUG then
 require("script/dbg.lua")
+end
 require("script/performance.lua")
 require("script/game_mgr.lua")
 require("script/menu.lua")

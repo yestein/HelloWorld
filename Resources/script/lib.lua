@@ -89,10 +89,6 @@ function Lib:ShowTBN(tb, n)
 	showTB(tb, 1)
 end
 
-function Lib:Reload()
-	print("Lib:Reload")
-end
-
 function Lib:GetDistance(nLogicX_A, nLogicY_A, nLogicX_B, nLogicY_B)
 
 	local nDistanceX = nLogicX_A - nLogicX_B

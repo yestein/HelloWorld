@@ -20,7 +20,6 @@ public:
     ~GameSprite();
 
     virtual BOOL IsBomb() {return FALSE;};
-    virtual BOOL OnBomb(){ return FALSE;};
     BOOL SetB2Body(b2Body* ptr_b2body){ m_ptr_b2body = ptr_b2body; return TRUE;};
     b2Body* GetB2Body() { return m_ptr_b2body;};
 

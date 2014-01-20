@@ -173,7 +173,10 @@ BOOL GamePhysicsWorld::processCollide()
                     num_ret_code = Bomb(bomb_postion.x, bomb_postion.y, float_power_linear, float_power_angular, float_bomb_radius);
                     KGLOG_PROCESS_ERROR(num_ret_code);
                 }
-                ptr_sprite->OnBomb();
+                if (m_ptr_bomb_callback)
+                {
+                    m_ptr_bomb_callback->Collide(ptr_sprite);
+                }
             }                   
         }
         vec_collide->clear();
@@ -213,11 +216,6 @@ BOOL GamePhysicsWorld::Bomb(
     m_ptr_b2world->QueryAABB(&bomb, aabb);
     num_ret_code = bomb.ProcessBomb();
     KGLOG_PROCESS_ERROR(num_ret_code);
-    if (m_ptr_bomb_callback)
-    {
-        m_ptr_bomb_callback->Bomb(float_bomb_x, float_bomb_y);
-    }
-
 	num_result = TRUE;
 Exit0:
 	return num_result;
@@ -367,10 +365,11 @@ Exit0:
 // ·â×°API
 
 BOOL GamePhysicsWorld::CreateRectEdge(
-    float float_left,
-    float float_right,
-    float float_buttom,
-    float float_top
+    GameSprite* ptr_sprite,
+    float left_edge,
+    float right_edge,
+    float buttom_edge,
+    float top_edge
 )
 {
 	int num_result = FALSE;
@@ -380,6 +379,9 @@ BOOL GamePhysicsWorld::CreateRectEdge(
     b2EdgeShape b2edgeshape_rect_edge;
     b2FixtureDef b2fixturedef_rect_edge;
     b2Body* b2body_rect_edge = NULL;
+
+    KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(!ptr_sprite->GetB2Body());
     
     b2bodydef_rect_edge.position.Set(0,0);        
     b2body_rect_edge = m_ptr_b2world->CreateBody(&b2bodydef_rect_edge);
@@ -388,29 +390,32 @@ BOOL GamePhysicsWorld::CreateRectEdge(
     b2fixturedef_rect_edge.shape = &b2edgeshape_rect_edge;
     // Bottom Edge
     b2edgeshape_rect_edge.Set(
-        b2Vec2(float_left / PTM_RATIO, float_buttom / PTM_RATIO), 
-        b2Vec2(float_right / PTM_RATIO, float_buttom / PTM_RATIO)
+        b2Vec2(left_edge / PTM_RATIO, buttom_edge / PTM_RATIO), 
+        b2Vec2(right_edge / PTM_RATIO, buttom_edge / PTM_RATIO)
     );
     b2body_rect_edge->CreateFixture(&b2fixturedef_rect_edge);
     // Left Edge
     b2edgeshape_rect_edge.Set(
-        b2Vec2(float_left / PTM_RATIO, float_buttom / PTM_RATIO), 
-        b2Vec2(float_left / PTM_RATIO, float_top / PTM_RATIO)
+        b2Vec2(left_edge / PTM_RATIO, buttom_edge / PTM_RATIO), 
+        b2Vec2(left_edge / PTM_RATIO, top_edge / PTM_RATIO)
     );
     b2body_rect_edge->CreateFixture(&b2fixturedef_rect_edge);
     // Top Edge
     b2edgeshape_rect_edge.Set(
-        b2Vec2(float_left / PTM_RATIO, float_top / PTM_RATIO), 
-        b2Vec2(float_right / PTM_RATIO, float_top / PTM_RATIO)
+        b2Vec2(left_edge / PTM_RATIO, top_edge / PTM_RATIO), 
+        b2Vec2(right_edge / PTM_RATIO, top_edge / PTM_RATIO)
     );
     b2body_rect_edge->CreateFixture(&b2fixturedef_rect_edge);
     // Right Edge
     b2edgeshape_rect_edge.Set(
-        b2Vec2(float_right / PTM_RATIO, float_buttom / PTM_RATIO),
-        b2Vec2(float_right / PTM_RATIO, float_top / PTM_RATIO)
+        b2Vec2(right_edge / PTM_RATIO, buttom_edge / PTM_RATIO),
+        b2Vec2(right_edge / PTM_RATIO, top_edge / PTM_RATIO)
     );
     b2body_rect_edge->CreateFixture(&b2fixturedef_rect_edge);
     
+    num_ret_code = ptr_sprite->SetB2Body(b2body_rect_edge);
+    KGLOG_PROCESS_ERROR(num_ret_code);
+
 	num_result = TRUE;
 Exit0:
     if (!num_result)
@@ -425,22 +430,29 @@ Exit0:
 
 BOOL GamePhysicsWorld::SetBoxBody(
     GameSprite* ptr_sprite, 
-    float float_width,
-    float float_height,
+    float width,
+    float height,
     MATERIAL* ptr_material,
-    float float_offset_x,
-    float float_offset_y,
-    BOOL bool_dynamic,
-    BOOL bool_is_bullet
+    float offset_x,
+    float offset_y,
+    BOOL is_dynamic,
+    BOOL is_bullet,
+    uint16 index_filter_group,
+    uint16 category_bits,
+    uint16 mask_bits
 )
 {
     int num_result = FALSE;
     int num_ret_code = FALSE;
 
     b2PolygonShape b2polygonshape_box;
-    b2polygonshape_box.SetAsBox(float_width / PTM_RATIO, float_height / PTM_RATIO);
+    KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(!ptr_sprite->GetB2Body());
 
-    num_ret_code = SetShapeBody(ptr_sprite, &b2polygonshape_box, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
+    b2polygonshape_box.SetAsBox(width / PTM_RATIO, height / PTM_RATIO);
+
+    num_ret_code = SetShapeBody(ptr_sprite, &b2polygonshape_box, ptr_material, offset_x, offset_y, 
+        is_dynamic, is_bullet, index_filter_group, category_bits, mask_bits);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
     num_result = TRUE;
@@ -459,16 +471,23 @@ BOOL GamePhysicsWorld::SetCircleBody(
     float float_offset_x,
     float float_offset_y,
     BOOL bool_dynamic,
-    BOOL bool_is_bullet
+    BOOL bool_is_bullet,
+    uint16 index_group,
+    uint16 category_bits,
+    uint16 mask_bits
 )
 {
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
 
     b2CircleShape b2circleshape_circle;
+    KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(!ptr_sprite->GetB2Body());
+
     b2circleshape_circle.m_radius = float_radius /PTM_RATIO;
 
-    num_ret_code = SetShapeBody(ptr_sprite, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y, bool_dynamic, bool_is_bullet);
+    num_ret_code = SetShapeBody(ptr_sprite, &b2circleshape_circle, ptr_material, float_offset_x, float_offset_y,
+        bool_dynamic, bool_is_bullet, index_group, category_bits, mask_bits);
     KGLOG_PROCESS_ERROR(num_ret_code);
 
 	num_result = TRUE;
@@ -487,7 +506,10 @@ BOOL GamePhysicsWorld::SetShapeBody(
     float float_offset_x,
     float float_offset_y,
     BOOL bool_dynamic,
-    BOOL bool_is_bullet
+    BOOL bool_is_bullet,
+    uint16 group_index,
+    uint16 category_bits,
+    uint16 mask_bits
 )
 {
     int num_result = FALSE;
@@ -499,10 +521,15 @@ BOOL GamePhysicsWorld::SetShapeBody(
 
     b2Fixture* ptr_fixture_shape = NULL;
     b2FixtureDef b2fixturedef_shape;
+    b2fixturedef_shape.filter.groupIndex = group_index;
+    b2fixturedef_shape.filter.categoryBits = category_bits;
+    b2fixturedef_shape.filter.maskBits = mask_bits;
+
     Point point_shape_position;
 
     assert(m_ptr_b2world);
     KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(!ptr_sprite->GetB2Body());
     KGLOG_PROCESS_ERROR(ptr_shape);
     KGLOG_PROCESS_ERROR(ptr_material);        
 
@@ -579,7 +606,8 @@ BOOL GamePhysicsWorld::SetPolygonBodyWithShapeName(
     b2Body* ptr_b2body_polygon = NULL;
     
 
-	KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(ptr_sprite);
+    KGLOG_PROCESS_ERROR(!ptr_sprite->GetB2Body());
     KGLOG_PROCESS_ERROR(ptr_gb2_shape_cache);
     
     bodyDef.type = b2_staticBody;
@@ -798,6 +826,51 @@ Exit0:
     return joint_id;
 }
 
+int GamePhysicsWorld::CreateWeldJoint(
+    GameSprite* ptr_sprite_a,
+    float float_offset_anchor_a_x,
+    float float_offset_anchor_a_y,
+    GameSprite* ptr_sprite_b,
+    float float_offset_anchor_b_x,
+    float float_offset_anchor_b_y,
+    float float_frequency_hz,
+    float float_damping_ratio
+)
+{
+    int joint_id = -1;
+    int num_ret_code = FALSE;
+
+    b2Joint* ptr_b2joint = NULL;
+    b2Body* ptr_b2body_a = NULL;
+    b2Body* ptr_b2body_b = NULL;
+
+    KGLOG_PROCESS_ERROR(ptr_sprite_a);
+    KGLOG_PROCESS_ERROR(ptr_sprite_b);
+
+    ptr_b2body_a = ptr_sprite_a->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body_a);
+
+    ptr_b2body_b = ptr_sprite_b->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body_b);
+
+    {
+        b2WeldJointDef jd;
+        jd.bodyA = ptr_b2body_a;
+        jd.bodyB = ptr_b2body_b;
+        jd.localAnchorA.Set(float_offset_anchor_a_x / PTM_RATIO, float_offset_anchor_a_y / PTM_RATIO);
+        jd.localAnchorB.Set(float_offset_anchor_b_x / PTM_RATIO, float_offset_anchor_b_y / PTM_RATIO);
+        jd.frequencyHz = float_frequency_hz;
+        jd.dampingRatio = float_damping_ratio;
+
+        ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
+        KGLOG_PROCESS_ERROR(ptr_b2joint);
+
+        joint_id = addJoint(ptr_b2joint);
+    }
+Exit0:
+    return joint_id;
+}
+
 int GamePhysicsWorld::CreateRevoluteJoint(
     GameSprite* ptr_sprite_a,
     float float_offset_anchor_a_x,
@@ -809,7 +882,8 @@ int GamePhysicsWorld::CreateRevoluteJoint(
     float float_lower_angle,
     float float_upper_angle,
     float float_motor_speed,
-    float float_max_motor_torque
+    float float_max_motor_torque,
+    BOOL bool_collide_connected
  )
 {
     int joint_id = -1;
@@ -840,6 +914,7 @@ int GamePhysicsWorld::CreateRevoluteJoint(
         jd.enableMotor = bool(1);
         jd.motorSpeed = float_motor_speed;
         jd.maxMotorTorque = float_max_motor_torque;
+        jd.collideConnected = bool_collide_connected;
 
         ptr_b2joint = m_ptr_b2world->CreateJoint(&jd);
         KGLOG_PROCESS_ERROR(ptr_b2joint);
@@ -992,6 +1067,25 @@ int GamePhysicsWorld::CreateGearJoint(
     }
 Exit0:
     return joint_id_gear;
+}
+
+BOOL GamePhysicsWorld::ApplyTorque(GameSprite* sprite, float torque)
+{
+    int num_result = FALSE;
+    int num_ret_code = FALSE;
+
+    b2Body* ptr_b2body = NULL;
+
+    KGLOG_PROCESS_ERROR(sprite);
+
+    ptr_b2body = sprite->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body);
+
+    ptr_b2body->ApplyTorque(torque);
+
+    num_result = TRUE;
+Exit0:
+    return num_result;
 }
 
 BOOL GamePhysicsWorld::ApplyImpulse(GameSprite* sprite, float float_impulse_x, float float_impulse_y)

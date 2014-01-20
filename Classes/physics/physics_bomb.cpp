@@ -61,8 +61,7 @@ BOOL PhysicsBomb::ProcessBomb()
         {
             m_ptr_bomb_callback->BeBombed(ptr_sprite);
         }
-    }
-    
+    }    
 
 	num_result = TRUE;
 Exit0:

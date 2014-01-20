@@ -32,13 +32,13 @@ function BattleLogic:OnActive(num_frame)
 	end
 	if num_frame % 3 == 0 then
 		if self.str_move_direction then
-			local body = self.tb_player.body
-			local impluse = 2500
-			if self.str_move_direction == "left" then
-				impluse = -2500
+			local motor = self.tb_player.motor
+			local torque = Def.MOTOR_POWER
+			if self.str_move_direction == "right" then
+				torque = -torque
 			end
-			PhysicsWorld:ApplyImpulse(body, impluse, 0)
-			Event:FireEvent("BodyMove", impluse)
+			PhysicsWorld:ApplyTorque(motor, torque)
+			Event:FireEvent("BodyMove", torque)
 		end
 	
 		if self.str_adjust_direction then
@@ -96,5 +96,9 @@ end
 function BattleLogic:Attack()
 	Event:FireEvent("Attack", self.num_attack_power)
 	self.num_attack_power = nil
+end
+
+function BattleLogic:GetBulletPower(power)
+	return 25 * Def.BULLET_DENSITY + power * 2.5 * Def.BULLET_DENSITY
 end
 

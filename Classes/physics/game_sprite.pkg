@@ -15,6 +15,5 @@ public:
     ~GameSprite();
 	
     virtual int IsBomb() {return FALSE;};
-    virtual int OnBomb(){ return FALSE};
 	b2Body* GetB2Body() { return m_ptr_b2body;};
 };

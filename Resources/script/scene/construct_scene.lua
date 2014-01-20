@@ -7,8 +7,11 @@
 --=======================================================================
 
 local Scene = SceneMgr:GetClass("ConstructScene", 1)
-Scene.can_touch = 1 --可接受触摸事件
-Scene.can_pick = 1 --可用鼠标拖拽物理刚体
+Scene.tb_property = {
+	can_touch = 1, --可接受触摸事件
+	can_pick  = 1, --可用鼠标拖拽物理刚体
+	debug_physics = 1, --是否显示物理引擎调试绘制
+}
 
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
@@ -18,61 +21,47 @@ end
 
 function Scene:_Init()
 	local tb_visible_size = CCDirector:getInstance():getVisibleSize()
-	PhysicsWorld:CreateRectEdge(0, tb_visible_size.width, 0, tb_visible_size.height)
-
 	local cc_layer_main = self:GetLayer("main")
-	local tb = {}
-	for i = 1, 5 do
-		local sprite, width, height = Physics:CreateBoxSprite("image/rect2.png", 100 + i * 16, 100, 1, 0.5, 0.5)
-		cc_layer_main:addChild(sprite)
-		tb[#tb + 1] = sprite
+
+	local sprite_background = GameSprite:create("image/background.png")
+    cc_layer_main:addChild(sprite_background)
+    sprite_background:setAnchorPoint(cc.p(0, 0))
+
+	num_ret_code = PhysicsWorld:CreateRectEdge(sprite_background, 0, tb_visible_size.width, 0, tb_visible_size.height)
+	assert(num_ret_code == 1)
+	
+	local tbParam = {
+		str_main_body = "image/rect3.png",
+		str_wheel = "image/tank_wheel.png",
+	}
+	local tb_ret = Physics:CreateCrawlerBelt(200, 100, tbParam)
+	if not tb_ret then
+		return
 	end
-	for i = 1, 5 do
-		local sprite, width, height = Physics:CreateBoxSprite("image/rect2.png", 220 - i * 20, 116, 1, 0.5, 0.5)
-		cc_layer_main:addChild(sprite)
-		tb[#tb + 1] = sprite
+	cc_layer_main:addChild(tb_ret.motor)
+	cc_layer_main:addChild(tb_ret.main_body)
+	cc_layer_main:addChild(tb_ret.wheel_back)
+	cc_layer_main:addChild(tb_ret.wheel_middle)
+	cc_layer_main:addChild(tb_ret.wheel_front)
+	for _, crawler in ipairs(tb_ret.tb_crawler) do
+		cc_layer_main:addChild(crawler)
 	end
-	for i = 1, 10 do
-		local i_next = i + 1 <= 10 and i + 1 or 1
-		PhysicsWorld:CreateDistanceJoint(tb[i], 0, 0, tb[i_next], 0, 0, 18)
+
+	local tbParam_2 = {
+		str_main_body = "image/rect4.png",
+		str_wheel = "image/circle.png",
+	}
+	local tb_ret_2 = Physics:CreateCrawlerBelt(400, 100, tbParam_2)
+	if not tb_ret_2 then
+		return
 	end
-	local pFrontWheel = GameSprite:create("image/tank_wheel.png")
-    local float_ball_x = 125
-    local float_ball_y = 108
-    pFrontWheel:setPosition(float_ball_x, float_ball_y)
-    cc_layer_main:addChild(pFrontWheel)
-
-    local float_radius = pFrontWheel:getContentSize().width * 0.5;
-    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
-    PhysicsWorld:SetCircleBody(pFrontWheel, float_radius, m, 0, 0, 1)
-
-    local middle_wheel = GameSprite:create("image/tank_wheel.png")
-    local float_ball_x = 145
-    local float_ball_y = 108
-    middle_wheel:setPosition(float_ball_x, float_ball_y)
-    cc_layer_main:addChild(middle_wheel)
-
-    local float_radius = middle_wheel:getContentSize().width * 0.5;
-    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
-    PhysicsWorld:SetCircleBody(middle_wheel, float_radius, m, 0, 0, 1)
-
-    local pBackWheel = GameSprite:create("image/tank_wheel.png")
-    local float_ball_x = 165
-    local float_ball_y = 108
-    pBackWheel:setPosition(float_ball_x, float_ball_y)
-    cc_layer_main:addChild(pBackWheel)
-
-    local float_radius = pBackWheel:getContentSize().width * 0.5;
-    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
-    PhysicsWorld:SetCircleBody(pBackWheel, float_radius, m, 0, 0, 1)
-
-    local id_joint = PhysicsWorld:CreateDistanceJoint(
-        pFrontWheel, 0,  0,
-        middle_wheel, 0, 0
-    )
-    local id_joint = PhysicsWorld:CreateDistanceJoint(
-        middle_wheel, 0,  0,
-        pBackWheel, 0, 0
-    )
+	cc_layer_main:addChild(tb_ret_2.motor)
+	cc_layer_main:addChild(tb_ret_2.main_body)
+	cc_layer_main:addChild(tb_ret_2.wheel_back)
+	cc_layer_main:addChild(tb_ret_2.wheel_middle)
+	cc_layer_main:addChild(tb_ret_2.wheel_front)
+	for _, crawler in ipairs(tb_ret_2.tb_crawler) do
+		cc_layer_main:addChild(crawler)
+	end
 	return 1
 end

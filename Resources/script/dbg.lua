@@ -19,6 +19,10 @@ Debug.tbWatchEventList = {
 Debug.tbWatchEventBlackList = {
 }
 
+Debug.tb_reload_list = {
+	"",
+}
+
 function Debug:Init(nMode)
 	if nMode == self.MODE_BLACK_LIST then
 		Event:RegistWatcher(Debug.tbWatchEventBlackList, self.Print)

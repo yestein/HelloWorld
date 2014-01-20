@@ -8,8 +8,11 @@
 
 local Scene = SceneMgr:GetClass("PolygonBreak", 1)
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
-Scene.can_touch = 1 --可接受触摸事件
-Scene.can_pick = 1 --可用鼠标拖拽物理刚体
+Scene.tb_property = {
+    can_touch  = 1,--可接受触摸事件
+    can_pick   = 1,--可用鼠标拖拽物理刚体
+    debug_physics = 1, --是否显示物理引擎调试绘制
+}
 
 function Scene:_Uninit( ... )
     -- body
@@ -20,7 +23,12 @@ function Scene:_Init()
 	local tbVisibleSize = CCDirector:getInstance():getVisibleSize()
 	local PhysicsWorld = self:GetPhysicsWorld()
     
-    PhysicsWorld:CreateRectEdge(0, tbVisibleSize.width, 0, tbVisibleSize.height);
+    local sprite_background = GameSprite:create("image/background.png")
+    cc_layer_main:addChild(sprite_background)
+    sprite_background:setAnchorPoint(cc.p(0, 0))
+
+    num_ret_code = PhysicsWorld:CreateRectEdge(sprite_background, 0, tbVisibleSize.width, 0, tbVisibleSize.height);
+    assert(num_ret_code == 1)
 
     local gamesprite_map = GameSprite:create("image/map.png")
     local tbRect = gamesprite_map:getTextureRect()

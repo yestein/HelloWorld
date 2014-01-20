@@ -6,9 +6,12 @@
 --===================================================
 
 local Scene = SceneMgr:GetClass("PhysicsScene", 1)
-Scene.can_touch = 1 --可接受触摸事件
-Scene.can_pick = 1 --可用鼠标拖拽物理刚体
-Scene.can_drag = 1 --可拖拽屏幕
+Scene.tb_property = {
+    can_touch  = 1,--可接受触摸事件
+    can_pick   = 1,--可用鼠标拖拽物理刚体
+    can_drag   = 1,--可拖拽屏幕
+    debug_physics = 1, --是否显示物理引擎调试绘制
+}
 
 function Scene:_Uninit()
 end
@@ -17,10 +20,10 @@ function Scene:_Init()
 	local cc_layer_main = self:GetLayer("main")
 	local tbVisibleSize = CCDirector:getInstance():getVisibleSize()
 
-    local bg = cc.Sprite:create("image/background.png")
+    local bg = GameSprite:create("image/background.png")
     local bgRect = bg:getTextureRect()
-    bg:setAnchorPoint(cc.p(0, 0))
     cc_layer_main:addChild(bg)
+    bg:setAnchorPoint(cc.p(0, 0))
 
     local width_scene = 0
     local PhysicsWorld = GamePhysicsWorld:GetInstance()
@@ -41,7 +44,8 @@ function Scene:_Init()
     bg:setScale(width_scene / bgRect.width)
     
     
-    PhysicsWorld:CreateRectEdge(0, width_scene, 0, height_scene);
+    num_ret_code = PhysicsWorld:CreateRectEdge(bg, 0, width_scene, 0, height_scene);
+    assert(num_ret_code == 1)
     
     local pMainBody = GameSprite:create("image/rect.png")
     local float_body_x = 100
