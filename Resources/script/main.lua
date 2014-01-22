@@ -14,7 +14,7 @@ function __G__TRACKBACK__(msg)
     print(debug.traceback())
     print("----------------------------------------")
 end
-
+_DEBUG = 1
 require("script/preload.lua")
 
 function cclog(...)

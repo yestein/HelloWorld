@@ -1,6 +1,6 @@
 /*
 ** Lua binding: lua_module
-** Generated automatically by tolua++-1.0.92 on 01/20/14 21:25:15.
+** Generated automatically by tolua++-1.0.92 on 01/22/14 19:29:57.
 */
 
 #ifndef __cplusplus
@@ -2156,21 +2156,23 @@ static int tolua_lua_module_BombSprite_Init00(lua_State* tolua_S)
      !tolua_isnumber(tolua_S,2,0,&tolua_err) ||
      !tolua_isnumber(tolua_S,3,0,&tolua_err) ||
      !tolua_isnumber(tolua_S,4,0,&tolua_err) ||
-     !tolua_isnoobj(tolua_S,5,&tolua_err)
+     !tolua_isnumber(tolua_S,5,0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,6,&tolua_err)
  )
   goto tolua_lerror;
  else
 #endif
  {
   BombSprite* self = (BombSprite*)  tolua_tousertype(tolua_S,1,0);
-  float power_linear = ((float)  tolua_tonumber(tolua_S,2,0));
-  float power_angular = ((float)  tolua_tonumber(tolua_S,3,0));
-  float radius = ((float)  tolua_tonumber(tolua_S,4,0));
+  int type = ((int)  tolua_tonumber(tolua_S,2,0));
+  float power_linear = ((float)  tolua_tonumber(tolua_S,3,0));
+  float power_angular = ((float)  tolua_tonumber(tolua_S,4,0));
+  float radius = ((float)  tolua_tonumber(tolua_S,5,0));
 #ifndef TOLUA_RELEASE
   if (!self) tolua_error(tolua_S,"invalid 'self' in function 'Init'", NULL);
 #endif
   {
-   int tolua_ret = (int)  self->Init(power_linear,power_angular,radius);
+   int tolua_ret = (int)  self->Init(type,power_linear,power_angular,radius);
    tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
   }
  }
@@ -2274,6 +2276,38 @@ static int tolua_lua_module_BombSprite_GetBombRadius00(lua_State* tolua_S)
 #ifndef TOLUA_RELEASE
  tolua_lerror:
  tolua_error(tolua_S,"#ferror in function 'GetBombRadius'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* method: GetBulletType of class  BombSprite */
+#ifndef TOLUA_DISABLE_tolua_lua_module_BombSprite_GetBulletType00
+static int tolua_lua_module_BombSprite_GetBulletType00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"BombSprite",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  BombSprite* self = (BombSprite*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetBulletType'", NULL);
+#endif
+  {
+   int tolua_ret = (int)  self->GetBulletType();
+   tolua_pushnumber(tolua_S,(lua_Number)tolua_ret);
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetBulletType'.",&tolua_err);
  return 0;
 #endif
 }
@@ -3225,6 +3259,7 @@ TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetLinearPower",tolua_lua_module_BombSprite_GetLinearPower00);
    tolua_function(tolua_S,"GetAngularPower",tolua_lua_module_BombSprite_GetAngularPower00);
    tolua_function(tolua_S,"GetBombRadius",tolua_lua_module_BombSprite_GetBombRadius00);
+   tolua_function(tolua_S,"GetBulletType",tolua_lua_module_BombSprite_GetBulletType00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"b2Body","b2Body","",NULL);
   tolua_beginmodule(tolua_S,"b2Body");

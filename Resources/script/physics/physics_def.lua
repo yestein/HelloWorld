@@ -10,8 +10,7 @@ if not Physics then
 end
 
 Physics.tb_plist = {
-	"physics/map-box2d.plist",
-	"physics/map-ground.plist",
+	"physics/map.plist",
 }
 
 -- 默认物理世界重力
@@ -23,4 +22,9 @@ local tb = {
 	backwheel = {"tank_wheel.png"},
 }
 
+Physics.GROUP_GROUND = 0x0001
+Physics.GROUP_TANK   = 0x0002
+Physics.GROUP_MOTOR = 0x8000
+
 Physics.MASK_GROUND = 0x0001
+Physics.MASK_MOTOR = 0x8000

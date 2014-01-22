@@ -17,6 +17,10 @@ Debug.tbWatchEventList = {
 }
 
 Debug.tbWatchEventBlackList = {
+	["BeBombed"] = 1,
+	["PowerChanged"] = 1,
+	["WeaponRotate"] = 1,
+	["Bomb"] = 1,
 }
 
 Debug.tb_reload_list = {

@@ -17,7 +17,17 @@ require("script/performance.lua")
 require("script/game_mgr.lua")
 require("script/menu.lua")
 require("script/ui.lua")
-require("script/battle_logic.lua")
+
+require("script/construct/construct.lua")
+require("script/construct/body.lua")
+require("script/construct/motor.lua")
+require("script/construct/weapon.lua")
+
+require("script/construct/movement/wheel_crawler.lua")
+
+require("script/battle/player.lua")
+require("script/battle/battle_logic.lua")
+require("script/battle/bullet_cfg.lua")
 
 require("script/scene/scene_mgr.lua")
 require("script/scene/scene_base.lua")

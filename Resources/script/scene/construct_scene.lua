@@ -30,7 +30,16 @@ function Scene:_Init()
 	num_ret_code = PhysicsWorld:CreateRectEdge(sprite_background, 0, tb_visible_size.width, 0, tb_visible_size.height)
 	assert(num_ret_code == 1)
 	
-	local physics_sprite_body, width_body, height_body = Physics:CreatePolygonSprite("tank", 200, 50)
+	self:TestCrawlerBelt()
+	self:TestSpider()
+	return 1
+end
+
+function Scene:TestCrawlerBelt()
+	local tb_visible_size = CCDirector:getInstance():getVisibleSize()
+	local cc_layer_main = self:GetLayer("main")
+
+	local physics_sprite_body, width_body, height_body = Physics:CreatePolygonSprite("tank_2", 200, 100)
     cc_layer_main:addChild(physics_sprite_body)
 
 	local tbParam = {
@@ -72,6 +81,11 @@ function Scene:_Init()
     	joint_motor_body, tb_ret.tb_joint.wheel_front, 1
     )
     assert(joint_motor_wheel_front)
-
-	return 1
 end
+
+function Scene:TestSpider()
+	local tb_visible_size = CCDirector:getInstance():getVisibleSize()
+	local cc_layer_main = self:GetLayer("main")
+
+end
+

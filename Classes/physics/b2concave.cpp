@@ -54,6 +54,7 @@ int b2Concave::BuildShapes(const b2Vec2* const_ptr_vetor_vertices, int count_ver
 {
     int num_result = FALSE;
     int num_ret_code = FALSE;
+    const float calc_scale = 32;
     b2Vec2* ptr_clone_vertices = NULL;
     b2Vec2* ptr_clone_vertices_backup = NULL;
     b2Vec2* ptr_vertices_cur_used = NULL;
@@ -78,8 +79,8 @@ int b2Concave::BuildShapes(const b2Vec2* const_ptr_vetor_vertices, int count_ver
     for(int i = 0; i < count_vertices; i++)
     {
         ptr_clone_vertices[i].Set(
-            const_ptr_vetor_vertices[i].x,
-            const_ptr_vetor_vertices[i].y
+            const_ptr_vetor_vertices[i].x * calc_scale,
+            const_ptr_vetor_vertices[i].y * calc_scale
             );
     }
     ptr_vertices_cur_used = ptr_clone_vertices;
@@ -89,7 +90,7 @@ int b2Concave::BuildShapes(const b2Vec2* const_ptr_vetor_vertices, int count_ver
         memset(&shape, 0, sizeof(shape));
         int ret_start_index = -1;
         int ret_end_index = -1;
-        num_ret_code = SlicePolygon(ptr_vertices_cur_used, num_rest_vertice, &shape, &ret_start_index, &ret_end_index);
+        num_ret_code = SlicePolygon(ptr_vertices_cur_used, num_rest_vertice, calc_scale, &shape, &ret_start_index, &ret_end_index);
         LOG_PROCESS_ERROR(num_ret_code && "Slice Failed");
         LOG_PROCESS_ERROR(shape.count_point >= 3);
         LOG_PROCESS_ERROR(ret_start_index >= 0);
@@ -131,13 +132,13 @@ int b2Concave::BuildShapes(const b2Vec2* const_ptr_vetor_vertices, int count_ver
         num_ret_code = IsPointEqual(
             ptr_clone_vertices[ret_start_index].x,
             ptr_clone_vertices[ret_start_index].y,
-            shape.array_point[0].x,
-            shape.array_point[0].y
+            shape.array_point[0].x * calc_scale,
+            shape.array_point[0].y * calc_scale
         );
         if(!num_ret_code)
         {
             // 如果是切割多边形，第二个顶点就是这个交点
-            ptr_vertices_cur_used[num_sort_index++] = shape.array_point[0];            
+            ptr_vertices_cur_used[num_sort_index++] = calc_scale * shape.array_point[0];            
         }
 
         // 跳过剔除的顶点
@@ -277,7 +278,7 @@ Exit0:
     return num_result;   
 }
 
-int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_vertices, SHAPE* ptr_shape, int* ptr_start_index, int* ptr_end_index)
+int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_vertices, float scale, SHAPE* ptr_shape, int* ptr_start_index, int* ptr_end_index)
 {
     int num_result = FALSE;
     int num_ret_code = FALSE;
@@ -288,15 +289,14 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
     {
         int index_previous = (index_cur > 0) ? index_cur - 1 : count_vertices - 1;
         int index_next = (index_cur < count_vertices - 1)? index_cur + 1 : index_cur + 1 - count_vertices;
-        const b2Vec2* ptr_point_previous = &const_ptr_vetor_vertices[index_previous];
-        const b2Vec2* ptr_point_cur = &const_ptr_vetor_vertices[index_cur];
-        const b2Vec2* ptr_point_next = &const_ptr_vetor_vertices[index_next];
+        const b2Vec2& point_previous = const_ptr_vetor_vertices[index_previous];
+        const b2Vec2& point_cur = const_ptr_vetor_vertices[index_cur];
+        const b2Vec2& point_next = const_ptr_vetor_vertices[index_next];
         float det_vector = det(
-            ptr_point_previous->x, ptr_point_previous->y,
-            ptr_point_cur->x, ptr_point_cur->y,
-            ptr_point_next->x, ptr_point_next->y
+            point_cur - point_previous,
+            point_next - point_cur
         );
-        if (det_vector >0.0f)
+        if (det_vector > 0.0f)
         {        
             index_start_valid = index_cur;
             break;
@@ -309,14 +309,13 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
         int index_next = (index_cur < count_vertices - 1)? index_cur + 1 : index_cur + 1 - count_vertices;
         int index_next_next = (index_cur < count_vertices - 2)? index_cur + 2 : index_cur + 2 - count_vertices; //如果是最后，循环到头
 
-        const b2Vec2* ptr_point_cur = &const_ptr_vetor_vertices[index_cur];
-        const b2Vec2* ptr_point_next = &const_ptr_vetor_vertices[index_next];
-        const b2Vec2* ptr_point_next_next = &const_ptr_vetor_vertices[index_next_next];
+        const b2Vec2& point_cur = const_ptr_vetor_vertices[index_cur];
+        const b2Vec2& point_next = const_ptr_vetor_vertices[index_next];
+        const b2Vec2& point_next_next = const_ptr_vetor_vertices[index_next_next];
 
         float det_vector = det(
-            ptr_point_cur->x, ptr_point_cur->y,
-            ptr_point_next->x, ptr_point_next->y,
-            ptr_point_next_next->x, ptr_point_next_next->y
+            point_next - point_cur,
+            point_next_next - point_next
         );
         if (det_vector > 0.0f) 
         {
@@ -335,15 +334,15 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
                 continue;
             }
 
-            const b2Vec2* ptr_point_check = &const_ptr_vetor_vertices[index_check];
-            const b2Vec2* ptr_point_check_next = &const_ptr_vetor_vertices[index_check_next];
+            const b2Vec2& point_check = const_ptr_vetor_vertices[index_check];
+            const b2Vec2& point_check_next = const_ptr_vetor_vertices[index_check_next];
 
             b2Vec2 point_result;
             num_ret_code = SearchIntersection(
-                ptr_point_cur->x, ptr_point_cur->y,
-                ptr_point_next->x, ptr_point_next->y,
-                ptr_point_check->x, ptr_point_check->y,
-                ptr_point_check_next->x, ptr_point_check_next->y,
+                point_cur.x, point_cur.y,
+                point_next.x, point_next.y,
+                point_check.x, point_check.y,
+                point_check_next.x, point_check_next.y,
                 &point_result
             );
             if (!num_ret_code) 
@@ -352,8 +351,8 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
             }
             num_ret_code = IsOnSegment(
                 point_result.x, point_result.y,
-                ptr_point_check->x, ptr_point_check->y,
-                ptr_point_check_next->x, ptr_point_check_next->y
+                point_check.x, point_check.y,
+                point_check_next.x, point_check_next.y
             );
             if (!num_ret_code)
             {
@@ -363,11 +362,17 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
             *ptr_start_index = index_check;
             *ptr_end_index = index_next;
 
-            ptr_shape->array_point[ptr_shape->count_point++] = point_result;
+            ptr_shape->array_point[ptr_shape->count_point++].Set(
+                point_result.x / scale,
+                point_result.y / scale
+                );
             int i = index_check_next;
             while(i != index_next)
             {
-                ptr_shape->array_point[ptr_shape->count_point++] = const_ptr_vetor_vertices[i];
+                ptr_shape->array_point[ptr_shape->count_point++].Set(
+                    const_ptr_vetor_vertices[i].x / scale,
+                    const_ptr_vetor_vertices[i].y / scale
+                    );
                 i++;
                 if (i >= count_vertices)
                 {
@@ -382,7 +387,10 @@ int b2Concave::SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_ve
     *ptr_end_index = count_vertices - 1;
     for(int i = 0; i < count_vertices; i++)
     {
-        ptr_shape->array_point[i] = const_ptr_vetor_vertices[i];
+        ptr_shape->array_point[i].Set(
+            const_ptr_vetor_vertices[i].x / scale,
+            const_ptr_vetor_vertices[i].y / scale
+        );
     }
     ptr_shape->count_point = count_vertices;
 

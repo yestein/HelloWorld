@@ -11,6 +11,7 @@ local PhysicsWorld = GamePhysicsWorld:GetInstance()
 Scene.tb_property = {
     can_touch  = 1,--可接受触摸事件
     can_pick   = 1,--可用鼠标拖拽物理刚体
+    can_drag = 1,
     debug_physics = 1, --是否显示物理引擎调试绘制
 }
 
@@ -30,10 +31,10 @@ function Scene:_Init()
     num_ret_code = PhysicsWorld:CreateRectEdge(sprite_background, 0, tbVisibleSize.width, 0, tbVisibleSize.height);
     assert(num_ret_code == 1)
 
-    local gamesprite_map = GameSprite:create("image/map.png")
+    local gamesprite_map = GameSprite:create("image/map1.png")
     local tbRect = gamesprite_map:getTextureRect()
     local clippingNodeBG = cc.ClippingNode:create(gamesprite_map)
-    gamesprite_map:setPosition(tbVisibleSize.width / 2, tbVisibleSize.height / 2)
+    gamesprite_map:setPosition(tbRect.width / 2, tbRect.height / 2)
     clippingNodeBG:setAlphaThreshold(0.05)
     clippingNodeBG:setInverted(false)
     
@@ -54,8 +55,8 @@ function Scene:_Init()
     cc_layer_main:addChild(clippingNodeBG)
     clippingNodeBG:addChild(clippingNode)
 
-    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map-box2d.plist") == 1)
-    assert(PhysicsWorld:SetPolygonBodyWithShapeName(gamesprite_map, "map", 0, 0, 0) == 1)
+    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map.plist") == 1)
+    assert(PhysicsWorld:SetPolygonBodyWithShapeName(gamesprite_map, "map1", 0, 0, 0) == 1)
     self.test_polygon = gamesprite_map
 
     local pFrontWheel = GameSprite:create("image/circle.png")

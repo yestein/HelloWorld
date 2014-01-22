@@ -347,7 +347,9 @@ function SceneBase:Reload()
 	reload("script/scene/construct_scene.lua")
 	reload("script/physics/physics_lib.lua")
 	reload("script/physics/physics_mgr.lua")
-	reload("script/battle_logic.lua")
+
+	reload("script/battle/battle_logic.lua")
+	
 	reload("script/game_mgr.lua")
 	reload("script/lib.lua")
 	reload("script/menu.lua")

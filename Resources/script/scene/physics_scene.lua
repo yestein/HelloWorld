@@ -27,18 +27,18 @@ function Scene:_Init()
 
     local width_scene = 0
     local PhysicsWorld = GamePhysicsWorld:GetInstance()
-    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map-box2d.plist") == 1)
-	for i = 1, 3 do
-        local map = GameSprite:create("image/map.png")
+    assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map.plist") == 1)
+
+        local map = GameSprite:create("image/map1.png")
     	local tbRect = map:getTextureRect()
 
-        local nX = tbRect.width * (i - 0.5) 
+        local nX = tbRect.width * 0.5 
         local nY = tbRect.height / 2
         width_scene = width_scene + tbRect.width
         map:setPosition(nX, nY)
     	cc_layer_main:addChild(map)        
-        assert(PhysicsWorld:SetPolygonBodyWithShapeName(map, "map", 0, 0, 0) == 1)
-    end
+        assert(PhysicsWorld:SetPolygonBodyWithShapeName(map, "map1", 0, 0, 0) == 1)
+
     local scale = width_scene / bgRect.width
     local height_scene = bgRect.height * scale
     bg:setScale(width_scene / bgRect.width)
@@ -49,7 +49,7 @@ function Scene:_Init()
     
     local pMainBody = GameSprite:create("image/rect.png")
     local float_body_x = 100
-    local float_body_y = tbVisibleSize.height / 2
+    local float_body_y = tbVisibleSize.height / 2 + 200
     local tbBodyRect = pMainBody:getTextureRect()
     pMainBody:setPosition(float_body_x, float_body_y)
     cc_layer_main:addChild(pMainBody)

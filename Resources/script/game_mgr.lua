@@ -29,8 +29,9 @@ function GameMgr:OnLoop(delta)
 	end
 end
 
-function GameMgr:OnActive(num_frame)
-	BattleLogic:OnActive(num_frame)
+function GameMgr:OnActive(frame)
+	BattleLogic:OnActive(frame)
+	Player:OnActive(frame)
 end
 
 function GameMgr:GetCurrentFrame()

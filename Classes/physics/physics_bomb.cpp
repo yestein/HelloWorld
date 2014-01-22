@@ -5,7 +5,8 @@
 PhysicsBomb::PhysicsBomb(
     BombSprite* ptr_bomb_sprite,
     BombCallback* ptr_bomb_callback
-): m_ptr_bomb_sprite(ptr_bomb_sprite)
+): m_ptr_bomb_sprite(ptr_bomb_sprite),
+m_ptr_bomb_callback(ptr_bomb_callback)
 {
 
 }

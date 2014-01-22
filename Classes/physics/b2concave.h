@@ -91,7 +91,7 @@ public:
 
 private:
     
-    int SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_vertices, SHAPE* ptr_shape, int* ptr_start_index, int* ptr_end_index);
+    int SlicePolygon(const b2Vec2* const_ptr_vetor_vertices, int count_vertices, float scale, SHAPE* ptr_shape, int* ptr_start_index, int* ptr_end_index);
     int SearchIntersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, b2Vec2* ptr_point_result);
     int IsPointEqual(float x1, float y1, float x2,float y2);
     int IsOnSegment(float point_x, float point_y, float x1, float y1, float x2, float y2);
@@ -99,6 +99,7 @@ private:
     int IsOnLine(float point_x, float point_y, float x1, float y1, float x2, float y2);
     float det(float x1, float y1, float x2, float y2, float x3, float y3)
     {
+        // 单位小的时候会有误差！！！
         return x1 * y2 + x2 * y3 + x3 * y1 - y1 * x2 - y2 * x3 - y3 * x1;
     }
     float det(const b2Vec2 &vec1, const b2Vec2 &vec2)

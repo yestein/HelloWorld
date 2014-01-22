@@ -4,6 +4,25 @@
 	<dict>
 		<key>frames</key>
 		<dict>
+			<key>ui/BLOOD-BLUE.png</key>
+			<dict>
+				<key>width</key>
+				<integer>187</integer>
+				<key>height</key>
+				<integer>19</integer>
+				<key>originalWidth</key>
+				<integer>187</integer>
+				<key>originalHeight</key>
+				<integer>19</integer>
+				<key>x</key>
+				<integer>0</integer>
+				<key>y</key>
+				<integer>0</integer>
+				<key>offsetX</key>
+				<real>0</real>
+				<key>offsetY</key>
+				<real>0</real>
+			</dict>
 			<key>ui/b1.png</key>
 			<dict>
 				<key>width</key>
@@ -17,7 +36,7 @@
 				<key>x</key>
 				<integer>0</integer>
 				<key>y</key>
-				<integer>0</integer>
+				<integer>21</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -36,7 +55,7 @@
 				<key>x</key>
 				<integer>0</integer>
 				<key>y</key>
-				<integer>48</integer>
+				<integer>69</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -55,7 +74,7 @@
 				<key>x</key>
 				<integer>81</integer>
 				<key>y</key>
-				<integer>0</integer>
+				<integer>21</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -74,7 +93,7 @@
 				<key>x</key>
 				<integer>81</integer>
 				<key>y</key>
-				<integer>49</integer>
+				<integer>70</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -93,7 +112,7 @@
 				<key>x</key>
 				<integer>132</integer>
 				<key>y</key>
-				<integer>0</integer>
+				<integer>21</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -112,26 +131,7 @@
 				<key>x</key>
 				<integer>132</integer>
 				<key>y</key>
-				<integer>48</integer>
-				<key>offsetX</key>
-				<real>0</real>
-				<key>offsetY</key>
-				<real>0</real>
-			</dict>
-			<key>D:/Program Files (x86)/CocoStudio/EditorDefaultRes/GUI/loadingbar.png</key>
-			<dict>
-				<key>width</key>
-				<integer>350</integer>
-				<key>height</key>
-				<integer>24</integer>
-				<key>originalWidth</key>
-				<integer>350</integer>
-				<key>originalHeight</key>
-				<integer>24</integer>
-				<key>x</key>
-				<integer>0</integer>
-				<key>y</key>
-				<integer>99</integer>
+				<integer>69</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -150,7 +150,7 @@
 				<key>x</key>
 				<integer>0</integer>
 				<key>y</key>
-				<integer>125</integer>
+				<integer>118</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -169,7 +169,7 @@
 				<key>x</key>
 				<integer>48</integer>
 				<key>y</key>
-				<integer>125</integer>
+				<integer>120</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -186,9 +186,9 @@
 				<key>originalHeight</key>
 				<integer>79</integer>
 				<key>x</key>
-				<integer>213</integer>
+				<integer>97</integer>
 				<key>y</key>
-				<integer>0</integer>
+				<integer>120</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>
@@ -205,9 +205,47 @@
 				<key>originalHeight</key>
 				<integer>79</integer>
 				<key>x</key>
-				<integer>97</integer>
+				<integer>145</integer>
 				<key>y</key>
-				<integer>125</integer>
+				<integer>118</integer>
+				<key>offsetX</key>
+				<real>0</real>
+				<key>offsetY</key>
+				<real>0</real>
+			</dict>
+			<key>ui/BLOOD-RED.png</key>
+			<dict>
+				<key>width</key>
+				<integer>289</integer>
+				<key>height</key>
+				<integer>25</integer>
+				<key>originalWidth</key>
+				<integer>289</integer>
+				<key>originalHeight</key>
+				<integer>25</integer>
+				<key>x</key>
+				<integer>213</integer>
+				<key>y</key>
+				<integer>0</integer>
+				<key>offsetX</key>
+				<real>0</real>
+				<key>offsetY</key>
+				<real>0</real>
+			</dict>
+			<key>ui/tablet.png</key>
+			<dict>
+				<key>width</key>
+				<integer>107</integer>
+				<key>height</key>
+				<integer>111</integer>
+				<key>originalWidth</key>
+				<integer>107</integer>
+				<key>originalHeight</key>
+				<integer>111</integer>
+				<key>x</key>
+				<integer>213</integer>
+				<key>y</key>
+				<integer>27</integer>
 				<key>offsetX</key>
 				<real>0</real>
 				<key>offsetY</key>

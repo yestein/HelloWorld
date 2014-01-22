@@ -24,7 +24,7 @@ public:
     b2Body* GetB2Body() { return m_ptr_b2body;};
 
 private:
-    bool m_bool_bomb;
+    int m_type;
     b2Body* m_ptr_b2body;
 };
 

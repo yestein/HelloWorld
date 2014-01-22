@@ -23,8 +23,9 @@ public:
     virtual BOOL IsBomb() {return TRUE;};
     virtual BOOL OnBomb();
 
-    BOOL Init(float power_linear, float power_angular, float radius)
+    BOOL Init(int type, float power_linear, float power_angular, float radius)
     {
+        m_type = type;
         m_float_power_linear = power_linear;
         m_float_power_angular = power_angular;
         m_float_bomb_radius = radius;
@@ -34,11 +35,14 @@ public:
     float GetLinearPower() {return m_float_power_linear;};
     float GetAngularPower() {return m_float_power_angular;};
     float GetBombRadius() {return m_float_bomb_radius;};
+    int GetBulletType() {return m_type;};
 
 private:
+    int m_type;
     float m_float_power_linear;
     float m_float_power_angular;
     float m_float_bomb_radius;    
+
 };
 
 #endif

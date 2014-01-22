@@ -88,125 +88,49 @@ function Physics:GetImagePath(str_polygon_name)
 	return string.format("image/%s.png", str_polygon_name)
 end
 
-function Physics:CreateCrawlerBelt(layer, x, y, body, crawler_belt_width, tbParam)
-	local str_wheel = tbParam.str_wheel
-	if not str_wheel then
-		return nil
-	end
-	local str_crawler = tbParam.str_crawler
-	if not str_crawler then
-		return
-	end
 
-	local num_ret_code = 0
-
-	--核心部件
+function Physics:CreateMotor(cc_layer, x, y, physics_sprite_body)
+	local tb_ret = {}
 	local tb_property = {
-		density       = 1,
-		friction      = 2,
-		restitution   = 0.5,
-		is_bullet     = 0,
-		group_index   = 0,
-		category_bits = 0x0001,
-		mask_bits     = Physics.MASK_GROUND,
+		category_bits = Physics.GROUP_MOTOR,
+		mask_bits     = Physics.MASK_MOTOR,
 	}
-    local width_body_half = crawler_belt_width / 2
-	local wheel_back, radius_back     = Physics:CreateCircleSprite(str_wheel, x - width_body_half, y, tb_property)
-	local wheel_middle, radius_middle = Physics:CreateCircleSprite(str_wheel, x, y, tb_property)
-	local wheel_front, radius_front   = Physics:CreateCircleSprite(str_wheel, x + width_body_half, y,tb_property)
-	
-	local wheel_middle_fixed = Physics:CreateCircleSprite(str_wheel, x, y, tb_property)
-	wheel_middle_fixed:setVisible(false)
+	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", x, y, tb_property)
+	motor:setVisible(false)
+	cc_layer:addChild(motor)
+	tb_ret.motor = motor
 
-	local joint_body_wheel_back = PhysicsWorld:CreateRevoluteJoint(
-    	body, - width_body_half, -20,
-    	wheel_back, 0, 0
+	local joint_motor_body = PhysicsWorld:CreateRevoluteJoint(
+		motor, 0, 0,
+    	physics_sprite_body, 0, 0    	
     )
-    assert(joint_body_wheel_back)
+    assert(joint_motor_body)
+    tb_ret.joint_motor_body = joint_motor_body
 
-    local joint_body_wheel_middle = PhysicsWorld:CreateRevoluteJoint(
-    	wheel_middle_fixed, 0, 0,
-    	wheel_middle, 0, 0
+    tb_property.friction = 100
+	local brake, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+	brake:setVisible(false)
+	cc_layer:addChild(brake)
+	tb_ret.brake = brake
+
+	local joint_brake_body = PhysicsWorld:CreateRevoluteJoint(
+		brake, width_brake / 2 - 5, 0, 
+    	physics_sprite_body, width_brake / 2 - 5, radius_motor + 15,
+    	1, 3.14, 4.72, 20, 10
     )
-    assert(joint_body_wheel_middle)
+    assert(joint_brake_body)
 
-    local joint_body_wheel_middle_fixed = PhysicsWorld:CreateWeldJoint(
-    	body, 0, -20,
-    	wheel_middle_fixed, 0, 0
+    local brake1, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+	brake1:setVisible(false)
+	cc_layer:addChild(brake1)
+	tb_ret.brake1 = brake1
+
+	local joint_brake_body = PhysicsWorld:CreateRevoluteJoint(
+		brake1, -width_brake / 2 + 5, 0, 
+    	physics_sprite_body, -width_brake / 2 + 5, radius_motor + 15,
+    	1, -4.72, -3.14, -20, 10
     )
-    assert(joint_body_wheel_middle_fixed)
+    assert(joint_brake_body)
 
-    local joint_body_wheel_front = PhysicsWorld:CreateRevoluteJoint(
-    	body, width_body_half, -20,
-    	wheel_front, 0, 0
-    )
-    assert(joint_body_wheel_front)
-
-	local texture_crawler = CCTextureCache:getInstance():addImage(str_crawler)
-	local width_crawler = texture_crawler:getContentSize().width
-	local height_crawler = texture_crawler:getContentSize().height
-	local repeat_part_length = 2
-	local width_crawler_width_calc = width_crawler - repeat_part_length
-	local freqency = 4
-	local ratio = 0.9
-	local length_crawler_belt = crawler_belt_width * 2 + 2 * 3.14 * radius_front
-	local num_group_crawler = math.ceil(length_crawler_belt / (2 * (width_crawler_width_calc)))
-	local tb_crawler_group = {}
-	local tb_crawler_total = {}
-	local offset = {
-		{-length_crawler_belt / 4, radius_front + height_crawler / 2,},
-		{-length_crawler_belt / 4, -radius_front - height_crawler / 2,},
-	}
-
-	tb_property.mask_bits = Physics.MASK_GROUND
-	tb_property.density = 2
-	for i = 1, 2 do
-		tb_crawler_group[i] = {}
-		local tb_crawler = tb_crawler_group[i]
-		for j = 1, num_group_crawler do
-			local crawler_x = x + offset[i][1] + 0.5 * width_crawler + (j - 1) * width_crawler_width_calc
-			local crawler_y = y + offset[i][2]
-			local sprite_crawler = Physics:CreateBoxSprite(str_crawler, crawler_x, crawler_y, tb_property)
-			tb_crawler[#tb_crawler + 1] = sprite_crawler
-			tb_crawler_total[#tb_crawler_total + 1] = sprite_crawler
-			if j > 1 then
-				PhysicsWorld:CreateRevoluteJoint(
-					tb_crawler[j], -width_crawler_width_calc / 2, 0,
-					tb_crawler[j - 1], width_crawler_width_calc / 2, 0
-				)
-			end
-		end
-	end
-	PhysicsWorld:CreateRevoluteJoint(
-		tb_crawler_group[1][num_group_crawler], width_crawler_width_calc / 2, 0,
-		tb_crawler_group[2][num_group_crawler], width_crawler_width_calc / 2, 0
-	)
-
-	PhysicsWorld:CreateRevoluteJoint(
-		tb_crawler_group[1][1], -width_crawler_width_calc / 2, 0,
-		tb_crawler_group[2][1], -width_crawler_width_calc / 2, 0
-	)
-
-	local tb_ret = {
-		wheel_back   = wheel_back,
-		wheel_middle = wheel_middle,
-		wheel_front  = wheel_front,
-		wheel_middle_fixed = wheel_middle_fixed,
-		tb_crawler = tb_crawler_total,
-		tb_joint = {
-			wheel_back = joint_body_wheel_back,
-			wheel_middle = joint_body_wheel_middle,
-			wheel_front = joint_body_wheel_front,
-		}
-	}
-
-	layer:addChild(tb_ret.wheel_back)
-	layer:addChild(tb_ret.wheel_middle)
-	layer:addChild(tb_ret.wheel_front)
-	layer:addChild(tb_ret.wheel_middle_fixed)
-
-	for _, crawler in ipairs(tb_ret.tb_crawler) do
-		layer:addChild(crawler)
-	end
-	return tb_ret
+    return tb_ret
 end
