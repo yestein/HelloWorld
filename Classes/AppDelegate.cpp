@@ -4,6 +4,7 @@
 #include "CCLuaEngine.h"
 #include "SimpleAudioEngine.h"
 #include "physics/tolua_lua_module.hpp"
+#include "physics/bomb_sprite.h"
 
 using namespace CocosDenshion;
 
@@ -20,16 +21,32 @@ AppDelegate::~AppDelegate()
 
 class LuaBombCallBack : public BombCallback
 {
-    virtual bool BeBombed(GameSprite* ptr_sprite)
+    virtual BOOL Bomb(GameSprite* ptr_sprite)
+    {
+        float float_bomb_x = ptr_sprite->getPositionX();
+        float float_bomb_y = ptr_sprite->getPositionY();
+        auto engine = LuaEngine::getInstance();
+        auto L = engine->getLuaStack()->getLuaState();
+        lua_getglobal(L, "CPPEvent");
+        lua_pushstring(L, "Bomb");
+        tolua_pushusertype(L ,(void*)ptr_sprite, "BombSprite");
+        lua_pushnumber(L, float_bomb_x);
+        lua_pushnumber(L, float_bomb_y);
+        lua_pcall(L, 4, 0, 0);
+
+        return TRUE;
+    }
+    virtual BOOL BeBombed(BombSprite* ptr_bomb_sprite, GameSprite* ptr_sprite)
     {
         auto engine = LuaEngine::getInstance();
         auto L = engine->getLuaStack()->getLuaState();
         lua_getglobal(L, "CPPEvent");
         lua_pushstring(L, "BeBombed");
-        tolua_pushusertype(L ,(void*)ptr_sprite, "GameSprite");
-        lua_pcall(L, 2, 0, -3);
+        tolua_pushusertype(L ,(void*)ptr_bomb_sprite, "BombSprite"); 
+        tolua_pushusertype(L ,(void*)ptr_sprite, "GameSprite"); 
+        lua_pcall(L, 3, 0, 0);
 
-        return true;
+        return TRUE;
     }
 };
 
@@ -64,9 +81,6 @@ bool AppDelegate::applicationDidFinishLaunching()
     engine->executeScriptFile(path.c_str());
     LuaBombCallBack* ptr_lua_callback = new LuaBombCallBack();
     GamePhysicsWorld::GetInstance()->SetupBombCallBack(ptr_lua_callback);
-
-	auto LuaStack = engine->getLuaStack();
-	engine->executeGlobalFunction("test");
 
     return true;
 }
