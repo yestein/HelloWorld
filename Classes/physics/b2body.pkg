@@ -1,4 +1,9 @@
 $#include "Box2D\Dynamics\b2Body.h"
+class b2Vec2
+{
+public:
+	float x, y;
+}
 
 class b2Body
 {
@@ -55,4 +60,5 @@ public:
     const b2Body* GetNext() const;
 
     void Dump();
+	b2Vec2 GetLinearVelocity() const;
  }

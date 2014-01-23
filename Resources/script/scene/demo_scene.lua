@@ -19,12 +19,18 @@ Scene:DeclareListenEvent("BeBombed", "OnBeBombed")
 -- Scene:DeclareListenEvent("WeaponRotate", "OnWeaponRotate")
 Scene:DeclareListenEvent("PowerChanged", "OnPowerChanged")
 Scene:DeclareListenEvent("Attack", "OnAttack")
+Scene:DeclareListenEvent("GameOver", "OnGameOver")
 
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 local tb_size_visible = CCDirector:getInstance():getVisibleSize()
 
 function Scene:_Uninit()
+	local cc_layer_main = self:GetLayer("main")
 	BattleLogic:Uninit()
+	Player:Uninit()
+	Enemy:Uninit()
+	Performance:Uninit(cc_layer_main)
+	self.is_run = nil
 end
 
 function Scene:_Init()
@@ -33,6 +39,7 @@ function Scene:_Init()
 	local height_visible = tb_size_visible.height
 
 	local cc_layer_main = self:GetLayer("main")
+	Performance:Init(cc_layer_main)
 	self:LoadControlUI()
 
 	self:CreateMap()
@@ -45,11 +52,11 @@ function Scene:_Init()
     	weapon_type = "test1",
     	motor_type = "test1",
 	}
-	Player:Init(cc_layer_main, hp, width_scene / 2 - 100, 230, tb_construct)
+	Player:Init(cc_layer_main, 1000, width_scene / 2 - 300, 250, tb_construct)
 
 	tb_construct.str_body = "tank_1_mirro"
 	tb_construct.weapon_type = nil
-    self.tb_enemy = Construct:BuildTank(cc_layer_main, width_scene / 2 + 100, 230, tb_construct)
+	Enemy:Init(cc_layer_main, 1000, width_scene / 2 + 300, 230, tb_construct)
 
     local body = Player:GetBody()
 	if not body then
@@ -58,6 +65,8 @@ function Scene:_Init()
 	self:FocusSprite(body)
 
     BattleLogic:Init(self.tb_enemy)
+	self.is_run = 1
+
     return 1
 end
 
@@ -75,6 +84,9 @@ function Scene:FocusSprite(sprite)
 end
 
 function Scene:OnLoop(delta)
+	if self.is_run ~= 1 then
+		return
+	end
 	local player_body = Player:GetBody()
 	if self.physics_sprite_bullet then
 		self:FocusSprite(self.physics_sprite_bullet)
@@ -239,7 +251,6 @@ function Scene:OnAttack(tb_bullet_property)
 	progressbar_power_old = tolua.cast(progressbar_power_old, "UILoadingBar")
 	progressbar_power = tolua.cast(progressbar_power, "UILoadingBar")
 	local percent = progressbar_power:getPercent()
-	print(percent)
 	progressbar_power_old:setPercent(percent)
 	progressbar_power:setPercent(0)
 
@@ -301,8 +312,12 @@ function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
     bomb_sprite:runAction(cc.Sequence:create(action_scale, action_delay_time, action_remove_self))
 
     function RecoverUI()
-		self.uilayer_control:setVisible(true)
-		self:SetUIEnable(true)
+		if Player:GetHP() <= 0 or Enemy:GetHP() <= 0 then
+			self:OnGameOver()
+		else
+			self.uilayer_control:setVisible(true)
+			self:SetUIEnable(true)
+		end
 	end
 	
 	local action_move_left = cc.MoveBy:create(0.02, cc.p(-3, 0))
@@ -324,22 +339,23 @@ function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
 		action_callback
 	)
 	cc_layer_main:runAction(sequence_actions)
-    cc_layer_main:removeChild(sprite_bullet)
+	cc_layer_main:removeChild(sprite_bullet)
     self.physics_sprite_bullet = nil
 
 	local ground = self:GetGroundSprite()
 	local destroy_range = Bullet:GetDestoryRange(bullet_type)
 	if destroy_range > 0 then
-		local num_ret_code = PhysicsWorld:ClipperPolygonByCircle(ground, destroy_range, 20, float_bomb_x, float_bomb_y)
+		local destory_x, destory_y = float_bomb_x , float_bomb_y
+		local num_ret_code = PhysicsWorld:ClipperPolygonByCircle(ground, destroy_range, 20, destory_x, destory_y)
 		if num_ret_code == 1 then
 			local scale = destroy_range / 30
 		    local pSprite = cc.Sprite:create("image/hole-erase.png")
-		    pSprite:setPosition(float_bomb_x, float_bomb_y)
+		    pSprite:setPosition(destory_x, destory_y)
 		    pSprite:setScale(scale) 
 		    self.pHole:addChild(pSprite)
 		    
 		    local pSpriteEdge = cc.Sprite:create("image/hole-edge.png")
-		    pSpriteEdge:setPosition(float_bomb_x, float_bomb_y) 
+		    pSpriteEdge:setPosition(destory_x, destory_y) 
 		    pSpriteEdge:setScale(scale) 
 		    self.pEdge:addChild(pSpriteEdge)
 		end
@@ -408,7 +424,7 @@ Scene.func_button_event = {
 }
 
 function Scene:OnBeBombed(bomb, target)
-	if target ~= Player:GetBody() and target ~= self.tb_enemy.body then
+	if target ~= Player:GetBody() and target ~= Enemy:GetBody() then
 		return
 	end
 	local bomb_x, bomb_y = bomb:getPosition()
@@ -428,5 +444,38 @@ function Scene:OnBeBombed(bomb, target)
 		angular_impulse = angular_impulse * -1
 	end
 	assert(PhysicsWorld:ApplyAngularImpulse(target, angular_impulse) == 1)
+
+	local bullet_type = bomb:GetBulletType()
+	local damage = Bullet:GetDamage(bullet_type)
+	local cur_hp, new_hp
+	if target == Player:GetBody() then
+		cur_hp = Player:GetHP()
+		new_hp = cur_hp - damage
+		Player:SetHP(new_hp)
+	else
+		cur_hp = Enemy:GetHP()
+		new_hp = cur_hp - damage
+		Enemy:SetHP(new_hp)
+	end
+	Event:FireEvent("CharacterHPChanged", target, cur_hp, new_hp, 1000)
+	
 	Event:FireEvent("BeBombDamage", bomb, target)
+end
+
+function Scene:OnGameOver()
+	local cc_layer_main = self:GetLayer("main")
+	function GameOver()
+		SceneMgr:DestroyScene(self:GetName())
+		local cc_scene = SceneMgr:GetSceneObj("MainScene")
+		CCDirector:getInstance():replaceScene(cc_scene)
+	end	
+
+	self:SysMsg("游戏结束", "red")
+	local action_delay_time = cc.DelayTime:create(3)
+	local action_callback = cc.CallFunc:create(GameOver)
+	local sequence_actions = cc.Sequence:create(
+		action_delay_time,
+		action_callback
+	)
+	cc_layer_main:runAction(sequence_actions)
 end

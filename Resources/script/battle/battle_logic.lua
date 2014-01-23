@@ -14,7 +14,7 @@ local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
 function BattleLogic:Init()
 	self.is_run = 1
-	self.tb_enemy = tb_enemy
+	
 end
 
 function BattleLogic:Uninit()

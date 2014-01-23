@@ -18,7 +18,8 @@ Bullet.tb_cfg = {
 		power_linear = 100000,
 		power_angular = 150000,
 		destroy_range = 0,
-		bomb_range = 100,
+		bomb_range = 50,
+		damage = 100,
 	},
 	[2] = {
 		image = "image/icon.png",
@@ -26,8 +27,10 @@ Bullet.tb_cfg = {
 		density = 0.01,
 		power_linear = 100000,
 		power_angular = 150000,
-		destroy_range = 50,
-		bomb_range = 50,
+		destroy_range = 30,
+		destroy_num = 3,
+		bomb_range = 30,
+		damage = 200,
 	},
 }
 
@@ -42,4 +45,22 @@ function Bullet:GetDestoryRange(bullet_type)
 	end
 
 	return cfg.destroy_range
+end
+
+function Bullet:GetDestoryNum(bullet_type)
+	local cfg = self:GetCfg(bullet_type)
+	if not cfg then
+		return 0
+	end
+
+	return cfg.destroy_num or 1
+end
+
+function Bullet:GetDamage(bullet_type)
+	local cfg = self:GetCfg(bullet_type)
+	if not cfg then
+		return 0
+	end
+
+	return cfg.damage
 end

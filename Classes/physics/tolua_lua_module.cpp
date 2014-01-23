@@ -1,6 +1,6 @@
 /*
 ** Lua binding: lua_module
-** Generated automatically by tolua++-1.0.92 on 01/22/14 19:29:57.
+** Generated automatically by tolua++-1.0.92 on 01/23/14 11:17:43.
 */
 
 #ifndef __cplusplus
@@ -37,6 +37,13 @@ static int tolua_collect_GamePhysicsWorld (lua_State* tolua_S)
 	return 0;
 }
 
+static int tolua_collect_b2Vec2 (lua_State* tolua_S)
+{
+ b2Vec2* self = (b2Vec2*) tolua_tousertype(tolua_S,1,0);
+	Mtolua_delete(self);
+	return 0;
+}
+
 static int tolua_collect_GamePhysicsWorld__MATERIAL (lua_State* tolua_S)
 {
  GamePhysicsWorld::MATERIAL* self = (GamePhysicsWorld::MATERIAL*) tolua_tousertype(tolua_S,1,0);
@@ -64,9 +71,10 @@ static int tolua_collect_BombSprite (lua_State* tolua_S)
 static void tolua_reg_types (lua_State* tolua_S)
 {
  tolua_usertype(tolua_S,"SpriteFrame");
+ tolua_usertype(tolua_S,"GameSprite");
  tolua_usertype(tolua_S,"Layer");
  tolua_usertype(tolua_S,"DebugPhysicsLayer");
- tolua_usertype(tolua_S,"GameSprite");
+ tolua_usertype(tolua_S,"b2Vec2");
  tolua_usertype(tolua_S,"Sprite");
  tolua_usertype(tolua_S,"Rect");
  tolua_usertype(tolua_S,"BombSprite");
@@ -2313,6 +2321,66 @@ static int tolua_lua_module_BombSprite_GetBulletType00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* get function: x of class  b2Vec2 */
+#ifndef TOLUA_DISABLE_tolua_get_b2Vec2_x
+static int tolua_get_b2Vec2_x(lua_State* tolua_S)
+{
+  b2Vec2* self = (b2Vec2*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'x'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->x);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: x of class  b2Vec2 */
+#ifndef TOLUA_DISABLE_tolua_set_b2Vec2_x
+static int tolua_set_b2Vec2_x(lua_State* tolua_S)
+{
+  b2Vec2* self = (b2Vec2*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'x'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->x = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* get function: y of class  b2Vec2 */
+#ifndef TOLUA_DISABLE_tolua_get_b2Vec2_y
+static int tolua_get_b2Vec2_y(lua_State* tolua_S)
+{
+  b2Vec2* self = (b2Vec2*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'y'",NULL);
+#endif
+  tolua_pushnumber(tolua_S,(lua_Number)self->y);
+ return 1;
+}
+#endif //#ifndef TOLUA_DISABLE
+
+/* set function: y of class  b2Vec2 */
+#ifndef TOLUA_DISABLE_tolua_set_b2Vec2_y
+static int tolua_set_b2Vec2_y(lua_State* tolua_S)
+{
+  b2Vec2* self = (b2Vec2*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  tolua_Error tolua_err;
+  if (!self) tolua_error(tolua_S,"invalid 'self' in accessing variable 'y'",NULL);
+  if (!tolua_isnumber(tolua_S,2,0,&tolua_err))
+   tolua_error(tolua_S,"#vinvalid type in variable assignment.",&tolua_err);
+#endif
+  self->y = ((float)  tolua_tonumber(tolua_S,2,0))
+;
+ return 0;
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* method: GetAngle of class  b2Body */
 #ifndef TOLUA_DISABLE_tolua_lua_module_b2Body_GetAngle00
 static int tolua_lua_module_b2Body_GetAngle00(lua_State* tolua_S)
@@ -3150,6 +3218,48 @@ static int tolua_lua_module_b2Body_Dump00(lua_State* tolua_S)
 }
 #endif //#ifndef TOLUA_DISABLE
 
+/* method: GetLinearVelocity of class  b2Body */
+#ifndef TOLUA_DISABLE_tolua_lua_module_b2Body_GetLinearVelocity00
+static int tolua_lua_module_b2Body_GetLinearVelocity00(lua_State* tolua_S)
+{
+#ifndef TOLUA_RELEASE
+ tolua_Error tolua_err;
+ if (
+     !tolua_isusertype(tolua_S,1,"const b2Body",0,&tolua_err) ||
+     !tolua_isnoobj(tolua_S,2,&tolua_err)
+ )
+  goto tolua_lerror;
+ else
+#endif
+ {
+  const b2Body* self = (const b2Body*)  tolua_tousertype(tolua_S,1,0);
+#ifndef TOLUA_RELEASE
+  if (!self) tolua_error(tolua_S,"invalid 'self' in function 'GetLinearVelocity'", NULL);
+#endif
+  {
+   b2Vec2 tolua_ret = (b2Vec2)  self->GetLinearVelocity();
+   {
+#ifdef __cplusplus
+    void* tolua_obj = Mtolua_new((b2Vec2)(tolua_ret));
+     tolua_pushusertype(tolua_S,tolua_obj,"b2Vec2");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#else
+    void* tolua_obj = tolua_copy(tolua_S,(void*)&tolua_ret,sizeof(b2Vec2));
+     tolua_pushusertype(tolua_S,tolua_obj,"b2Vec2");
+    tolua_register_gc(tolua_S,lua_gettop(tolua_S));
+#endif
+   }
+  }
+ }
+ return 1;
+#ifndef TOLUA_RELEASE
+ tolua_lerror:
+ tolua_error(tolua_S,"#ferror in function 'GetLinearVelocity'.",&tolua_err);
+ return 0;
+#endif
+}
+#endif //#ifndef TOLUA_DISABLE
+
 /* Open function */
 TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
 {
@@ -3261,6 +3371,15 @@ TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetBombRadius",tolua_lua_module_BombSprite_GetBombRadius00);
    tolua_function(tolua_S,"GetBulletType",tolua_lua_module_BombSprite_GetBulletType00);
   tolua_endmodule(tolua_S);
+  #ifdef __cplusplus
+  tolua_cclass(tolua_S,"b2Vec2","b2Vec2","",tolua_collect_b2Vec2);
+  #else
+  tolua_cclass(tolua_S,"b2Vec2","b2Vec2","",NULL);
+  #endif
+  tolua_beginmodule(tolua_S,"b2Vec2");
+   tolua_variable(tolua_S,"x",tolua_get_b2Vec2_x,tolua_set_b2Vec2_x);
+   tolua_variable(tolua_S,"y",tolua_get_b2Vec2_y,tolua_set_b2Vec2_y);
+  tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"b2Body","b2Body","",NULL);
   tolua_beginmodule(tolua_S,"b2Body");
    tolua_function(tolua_S,"GetAngle",tolua_lua_module_b2Body_GetAngle00);
@@ -3289,6 +3408,7 @@ TOLUA_API int tolua_lua_module_open (lua_State* tolua_S)
    tolua_function(tolua_S,"GetNext",tolua_lua_module_b2Body_GetNext00);
    tolua_function(tolua_S,"GetNext",tolua_lua_module_b2Body_GetNext01);
    tolua_function(tolua_S,"Dump",tolua_lua_module_b2Body_Dump00);
+   tolua_function(tolua_S,"GetLinearVelocity",tolua_lua_module_b2Body_GetLinearVelocity00);
   tolua_endmodule(tolua_S);
   tolua_cclass(tolua_S,"b2Joint","b2Joint","",NULL);
   tolua_beginmodule(tolua_S,"b2Joint");

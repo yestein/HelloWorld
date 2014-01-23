@@ -173,7 +173,8 @@ function SceneBase:AddReturnMenu()
 					szItemName = "返回主菜单",
 		        	fnCallBack = function()
 		        		SceneMgr:DestroyScene(str_name)
-		        		CCDirector:getInstance():popScene()
+		        		local cc_scene = SceneMgr:GetSceneObj("MainScene")
+		        		CCDirector:getInstance():replaceScene(cc_scene)
 		        	end,
 		        },
 		        [2] = {
@@ -181,7 +182,8 @@ function SceneBase:AddReturnMenu()
 		        	fnCallBack = function()
 		        		self:Reload()
 		        		SceneMgr:DestroyScene(str_name)
-		        		CCDirector:getInstance():popScene()
+		        		local cc_scene = SceneMgr:GetSceneObj("MainScene")
+		        		CCDirector:getInstance():replaceScene(cc_scene)
 						local tbScene = GameMgr:LoadScene(str_name)
 						tbScene:SysMsg("重载完毕", "green")
 		        	end,

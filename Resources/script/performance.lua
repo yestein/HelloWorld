@@ -27,11 +27,18 @@ function Performance:Init(layer)
         labelFly:setVisible(false)
         self.tbFlyLabel[i] = labelFly
 	end
-	self:UnRegistEvent()
+	self.hp = {}
 	self:RegistEvent()
 end
 
-function Performance:Uninit()
+function Performance:Uninit(layer)
+    self:UnRegistEvent()
+    self.nDamageIndex = nil
+	for i, labelFly in ipairs(self.tbFlyLabel) do
+        layer:removeChild(labelFly, true)
+	end
+	self.hp = nil
+	self.tbFlyLabel = nil	
 end
 
 function Performance:GetAvaiableFlyLabel()
@@ -45,9 +52,80 @@ function Performance:GetAvaiableFlyLabel()
 end
 
 function Performance:RegistEvent()
+	if not self.nRegCharacterAdd then
+		Event:RegistEvent("CharacterAdd", self.OnCharacterAdd, self)
+	end
 
+	if not self.nRegHPChanged then
+		self.nRegHPChanged = Event:RegistEvent("CharacterHPChanged", self.OnCharacterHPChanged, self)
+	end
 end
 
 function Performance:UnRegistEvent()
+	if self.nRegCharacterAdd then
+		Event:UnRegistEvent("CharacterAdd", self.nRegCharacterAdd )
+		self.nRegCharacterAdd = nil
+	end
 
+	if self.nRegHPChanged then
+		Event:UnRegistEvent("CharacterHPChanged", self.nRegHPChanged )
+		self.nRegHPChanged = nil
+	end
+end
+
+function Performance:OnCharacterAdd(pSprite, hp)
+	local tbSpriteSize = pSprite:getContentSize()
+	local spriteHP = cc.Sprite:create("image/blood.png")
+	local progressHP = CCProgressTimer:create(spriteHP)
+	if pSprite:getChildByTag(326) then
+		pSprite:removeChildByTag(326, true)
+	end
+	local progressSize = spriteHP:getContentSize()
+	progressHP:setType(1)
+	progressHP:setMidpoint(cc.p(0, 0.5))
+    progressHP:setBarChangeRate(cc.p(1, 0))	
+	progressHP:setPercentage(100)
+	progressHP:setAnchorPoint(cc.p(0.5, 0))
+    progressHP:setScaleX(tbSpriteSize.width / progressSize.width)
+    progressHP:setScaleY(10 / progressSize.height)
+    progressHP:setPosition(tbSpriteSize.width / 2, tbSpriteSize.height + 20)
+    -- progressHP:setVisible(false)
+    pSprite:addChild(progressHP)
+    self.hp[pSprite] = progressHP
+end
+
+
+function Performance:OnCharacterHPChanged(pSprite, nBeforeHP, nAfterHP, nMaxHP)
+	local nDamage = nAfterHP - nBeforeHP
+	local color = nil
+	local szMsg = nil
+	if nDamage == 0 then
+		return
+	elseif nDamage < 0 then
+		color = Def.tbColor["red"]
+		szMsg = tostring(nDamage)
+	elseif nDamage > 0 then
+		color = Def.tbColor["red"]
+		szMsg = "+"..tostring(nDamage)
+	end
+
+	local progressHP = self.hp[pSprite]
+	if not progressHP then
+		assert(false)
+		return
+	end
+	progressHP:setPercentage(nAfterHP * 100 / nMaxHP)
+
+
+	local nX, nY = pSprite:getPosition()
+	local label = self:GetAvaiableFlyLabel()
+	if not label then
+		return
+	end
+	label:setColor(color)
+	label:setString(szMsg)	
+	label:setVisible(true)
+	label:setPosition(nX, nY + 10)
+	local action = CCSpawn:createWithTwoActions(CCFadeOut:create(1), CCMoveBy:create(1, cc.p(0, 40)))
+	label:runAction(action)
 end

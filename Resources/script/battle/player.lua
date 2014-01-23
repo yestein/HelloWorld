@@ -26,7 +26,7 @@ function Player:Init(cc_layer, hp, x, y, tb_construct)
 	self.str_adjust_direction = nil
 	self.num_attack_power = nil
 
-	Event:FireEvent("PlayerInit", hp, x, y, tb_construct)
+	Event:FireEvent("CharacterAdd", self.body, hp, x, y, tb_construct)
 end
 
 function Player:Uninit()
@@ -126,10 +126,10 @@ end
 
 function Player:UpdatePosition()
 	local x, y = self.body:getPosition()
-	if x ~= self.x or y ~= self.y then
-		self.x = x
-		self.y = y
-		Event:FireEvent("UpdatePlayerPosition", x, y)
+	if math.floor(x) ~= self.x or math.floor(y) ~= self.y then
+		self.x = math.floor(x)
+		self.y = math.floor(y)
+		Event:FireEvent("UpdatePlayerPosition", self.x, self.y)
 	end
 end
 
