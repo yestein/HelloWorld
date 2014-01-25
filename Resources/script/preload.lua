@@ -24,6 +24,7 @@ require("script/construct/motor.lua")
 require("script/construct/weapon.lua")
 
 require("script/construct/movement/wheel_crawler.lua")
+require("script/construct/movement/spider.lua")
 
 require("script/battle/player.lua")
 require("script/battle/enemy.lua")

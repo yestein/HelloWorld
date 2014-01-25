@@ -29,6 +29,7 @@ function SceneBase:Init(str_scene_name)
 	self.tb_cc_layer = {}
 	self.tb_reg_event = {}
 
+
 	-- 场景默认设为屏幕大小
 	self:SetWidth(tb_visible_size.width)
 	self:SetHeight(tb_visible_size.height)
@@ -36,7 +37,9 @@ function SceneBase:Init(str_scene_name)
 	self:RegisterEventListen()
 	Ui:InitScene(str_scene_name, self.cc_scene)
 	self:AddReturnMenu()
-	self:CreateLayer("main", Def.ZOOM_LEVEL_WORLD)
+	local layer_main = self:CreateLayer("main", Def.ZOOM_LEVEL_WORLD)
+	layer_main:setAnchorPoint(cc.p(0, 0))
+	self.scale = 1
 	self:_Init()
 
 	if self:CanTouch() == 1 then
@@ -44,18 +47,17 @@ function SceneBase:Init(str_scene_name)
 	end
 
 	if self:IsDebugPhysics() == 1 then
-	    	local layer_main = self:GetLayer("main")
-	        local layer_debug_phyiscs = DebugPhysicsLayer:create()
+        local layer_debug_phyiscs = DebugPhysicsLayer:create()
 
-			layer_main:addChild(layer_debug_phyiscs, 10)
+		layer_main:addChild(layer_debug_phyiscs, 10)
 
-	    end
-
+    end
 	Event:FireEvent("SceneCreate", self:GetClassName(), self:GetName())
 end
 
 function SceneBase:Uninit()
 	Event:FireEvent("SceneDestroy", self:GetClassName(), self:GetName())
+	self.scale = nil
 	self:_Uninit()
 	local cc_layer_main = self:GetLayer("main")
 	self.cc_scene:removeChild(cc_layer_main)
@@ -254,9 +256,13 @@ function SceneBase:RegisterTouchEvent()
     local function onTouchBegan(x, y)
         touchBeginPoint = {x = x, y = y}
         touchStartPoint = {x = x, y = y}
+        print(x, y)
         local nX, nY = cc_layer_main:getPosition()
+        print(nX, nY)
+        print(self.scale)
+        print((x - nX) / self.scale,  (y - nY) / self.scale)
         if self:CanPick() == 1 then
-        	PhysicsWorld:MouseDown(x - nX,  y - nY)
+        	PhysicsWorld:MouseDown((x - nX) / self.scale,  (y - nY) / self.scale)
         end
         return true
     end
@@ -266,7 +272,7 @@ function SceneBase:RegisterTouchEvent()
             local layer_x, layer_y = cc_layer_main:getPosition()
             local bool_pick = 0
             if self:CanPick() == 1 then
-             	if PhysicsWorld:MouseMove(x - layer_x,  y - layer_y) == 1 then
+             	if PhysicsWorld:MouseMove((x - layer_x) / self.scale,  (y - layer_y)  / self.scale) == 1 then
              		bool_pick = 1
              	end
             end
@@ -287,7 +293,7 @@ function SceneBase:RegisterTouchEvent()
         	end
         end
         if self:CanPick() == 1 then
-        	PhysicsWorld:MouseUp(x - nX,  y - nY)
+        	PhysicsWorld:MouseUp((x - nX) / self.scale,  (y - nY) / self.scale)
         end
         touchBeginPoint = nil
     end
@@ -317,12 +323,12 @@ function SceneBase:MoveMainLayer(position_x, position_y)
 	if self:IsLimitDrag() == 1 then
         position_x, position_y = self:GetModifyPosition(position_x, position_y)
     end
-    cc_layer_main:setPosition(position_x, position_y)
+    cc_layer_main:setPosition(position_x * self.scale, position_y * self.scale)
 end
 
 function SceneBase:GetModifyPosition(position_x, position_y)
-	local min_x, max_x = tb_visible_size.width - self:GetWidth() , 0
-    local min_y, max_y = tb_visible_size.height - self:GetHeight(),  0
+	local min_x, max_x = (tb_visible_size.width - self:GetWidth()), 0
+    local min_y, max_y = (tb_visible_size.height - self:GetHeight()),  0
     if position_x < min_x then
         position_x = min_x
     elseif position_x > max_x then
@@ -335,6 +341,13 @@ function SceneBase:GetModifyPosition(position_x, position_y)
         position_y = max_y
     end
     return position_x, position_y
+end
+
+function SceneBase:SetScale(scale)
+	local cc_layer_main = self:GetLayer("main")
+	self.scale = scale
+	print(self.scale)
+	cc_layer_main:setScale(scale)
 end
 
 function SceneBase:Reload()

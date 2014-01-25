@@ -56,7 +56,7 @@ function Scene:_Init()
 
 	tb_construct.str_body = "tank_1_mirro"
 	tb_construct.weapon_type = nil
-	Enemy:Init(cc_layer_main, 1000, width_scene / 2 + 300, 230, tb_construct)
+	Enemy:Init(cc_layer_main, 1000, width_scene / 2 + 300, 250, tb_construct)
 
     local body = Player:GetBody()
 	if not body then
@@ -66,7 +66,7 @@ function Scene:_Init()
 
     BattleLogic:Init(self.tb_enemy)
 	self.is_run = 1
-
+	self:SetScale(0.8)
     return 1
 end
 

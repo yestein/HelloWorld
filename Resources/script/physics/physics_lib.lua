@@ -11,15 +11,57 @@ end
 
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
-function Physics:CreatePolygonSprite(str_polygon_name, x, y)
-	local str_image_path = self:GetImagePath(str_polygon_name)
-	local physics_sprite = GameSprite:create(str_image_path)
-	physics_sprite:setPosition(x, y)
-    local width_sprite = physics_sprite:getContentSize().width
-    local height_sprite = physics_sprite:getContentSize().height
-    local offset_x, offset_y, bool_dynamic = 0, 0, 1
-    assert(PhysicsWorld:SetPolygonBodyWithShapeName(physics_sprite, str_polygon_name, offset_x, offset_y, bool_dynamic) == 1)
-    return physics_sprite, width_sprite, height_sprite
+function Physics:CreateBody(body_type, image_path, x, y, tb_property)
+	if body_type == "box" then
+		return self:CreateBoxSprite(image_path, x, y, tb_property)
+	elseif body_type == "circle" then
+		return self:CreateCircleSprite(image_path, x, y, tb_property)
+	elseif body_type =="polygon" then
+		return self:CreatePolygonSprite(image_path, x, y)
+	end
+end
+
+function Physics:CreateJoint(joint_type, body_a, body_b, tb_param)
+	if joint_type == "revolute" then
+		local anchor_x_a, anchor_y_a = 0, 0
+		if tb_param.anchor_a then
+			anchor_x_a, anchor_y_a = unpack(tb_param.anchor_a)
+		end
+		local anchor_x_b, anchor_y_b = 0, 0
+		if tb_param.anchor_b then
+			anchor_x_b, anchor_y_b = unpack(tb_param.anchor_b)
+		end
+		local is_limit = tb_param.is_limit or 0
+		local min_angel = tb_param.min_angel or 0
+		local max_angel = tb_param.max_angel or 0
+		local speed = tb_param.speed or 10
+		local torque = tb_param.torque or 0
+
+		return PhysicsWorld:CreateRevoluteJoint(
+			body_a, anchor_x_a, anchor_y_a, 
+    		body_b, anchor_x_b, anchor_y_b,
+    		is_limit, min_angel, max_angel, speed, torque
+    	)
+	elseif joint_type == "distance" then
+		local anchor_x_a, anchor_y_a = 0, 0
+		if tb_param.anchor_a then
+			anchor_x_a, anchor_y_a = unpack(tb_param.anchor_a)
+		end
+		local anchor_x_b, anchor_y_b = 0, 0
+		if tb_param.anchor_b then
+			anchor_x_b, anchor_y_b = unpack(tb_param.anchor_b)
+		end
+		local length = tb_param.length or -1
+        local frequency_hz = tb_param.frequency_hz or 0
+        local damping_ratio = tb_param.damping_ratio or 0
+        local is_collide = tb_param.is_collide or 0
+		
+		return PhysicsWorld:CreateDistanceJoint(
+			body_a, anchor_x_a, anchor_y_a, 
+    		body_b, anchor_x_b, anchor_y_b,
+    		length, frequency_hz, damping_ratio, is_collide
+    	)
+	end
 end
 
 function Physics:CreateBoxSprite(str_image_path, x, y, tb_property)
@@ -82,6 +124,17 @@ function Physics:CreateCircleSprite(str_image_path, x, y, tb_property)
     	group_index, category_bits, mask_bits
     )
     return physics_sprite, radius_physics
+end
+
+function Physics:CreatePolygonSprite(str_polygon_name, x, y)
+	local str_image_path = self:GetImagePath(str_polygon_name)
+	local physics_sprite = GameSprite:create(str_image_path)
+	physics_sprite:setPosition(x, y)
+    local width_sprite = physics_sprite:getContentSize().width
+    local height_sprite = physics_sprite:getContentSize().height
+    local offset_x, offset_y, bool_dynamic = 0, 0, 1
+    assert(PhysicsWorld:SetPolygonBodyWithShapeName(physics_sprite, str_polygon_name, offset_x, offset_y, bool_dynamic) == 1)
+    return physics_sprite, width_sprite, height_sprite
 end
 
 function Physics:GetImagePath(str_polygon_name)
