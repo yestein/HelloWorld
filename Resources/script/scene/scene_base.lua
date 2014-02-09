@@ -27,6 +27,7 @@ function SceneBase:Init(str_scene_name)
 	self.tb_cc_layer = {}
 	self.tb_reg_event = {}
 
+
 	-- 场景默认设为屏幕大小
 	self:SetWidth(tb_visible_size.width)
 	self:SetHeight(tb_visible_size.height)
@@ -34,7 +35,9 @@ function SceneBase:Init(str_scene_name)
 	self:RegisterEventListen()
 	Ui:InitScene(str_scene_name, self.cc_scene)
 	self:AddReturnMenu()
-	self:CreateLayer("main", Def.ZOOM_LEVEL_WORLD)
+	local layer_main = self:CreateLayer("main", Def.ZOOM_LEVEL_WORLD)
+	layer_main:setAnchorPoint(cc.p(0, 0))
+	self.scale = 1
 	self:_Init()
 
 	if self:CanTouch() == 1 then
@@ -42,17 +45,26 @@ function SceneBase:Init(str_scene_name)
 	end
 
 	if self:IsDebugPhysics() == 1 then
+<<<<<<< HEAD
     	local layer_main = self:GetLayer("main")
         local layer_debug_phyiscs = DebugPhysicsLayer:create()
 
 		layer_main:addChild(layer_debug_phyiscs, 10)
     end
     print(self:GetClassName(), self:GetName())
+=======
+        local layer_debug_phyiscs = DebugPhysicsLayer:create()
+
+		layer_main:addChild(layer_debug_phyiscs, 10)
+
+    end
+>>>>>>> dd21e3327ffed3731bf4670c83cb3c5cad27d6c8
 	Event:FireEvent("SceneCreate", self:GetClassName(), self:GetName())
 end
 
 function SceneBase:Uninit()
 	Event:FireEvent("SceneDestroy", self:GetClassName(), self:GetName())
+	self.scale = nil
 	self:_Uninit()
 	local cc_layer_main = self:GetLayer("main")
 	self.cc_scene:removeChild(cc_layer_main)
@@ -248,6 +260,7 @@ end
 function SceneBase:RegisterTouchEvent()
 	local cc_layer_main = self:GetLayer("main")
 
+<<<<<<< HEAD
 	local touch_begin_points = {}
     local touch_start_points = {}
 
@@ -263,6 +276,18 @@ function SceneBase:RegisterTouchEvent()
         		self:OnTouchBegan(x - layer_x, y - layer_y)
         	end
         	-- PhysicsWorld:MouseDown(x - nX,  y - nY)
+=======
+    local function onTouchBegan(x, y)
+        touchBeginPoint = {x = x, y = y}
+        touchStartPoint = {x = x, y = y}
+        print(x, y)
+        local nX, nY = cc_layer_main:getPosition()
+        print(nX, nY)
+        print(self.scale)
+        print((x - nX) / self.scale,  (y - nY) / self.scale)
+        if self:CanPick() == 1 then
+        	PhysicsWorld:MouseDown((x - nX) / self.scale,  (y - nY) / self.scale)
+>>>>>>> dd21e3327ffed3731bf4670c83cb3c5cad27d6c8
         end
         return true
     end
@@ -273,10 +298,17 @@ function SceneBase:RegisterTouchEvent()
     		local touch_begin_point = touch_begin_points[0]
             local layer_x, layer_y = cc_layer_main:getPosition()
             local bool_pick = 0
+<<<<<<< HEAD
         	if self.OnTouchMoved then
         		if self:OnTouchMoved(x - layer_x, y - layer_y) == 1 then
         			bool_pick = 1
         		end
+=======
+            if self:CanPick() == 1 then
+             	if PhysicsWorld:MouseMove((x - layer_x) / self.scale,  (y - layer_y)  / self.scale) == 1 then
+             		bool_pick = 1
+             	end
+>>>>>>> dd21e3327ffed3731bf4670c83cb3c5cad27d6c8
             end
             if bool_pick ~= 1 and self:CanDrag() == 1 then
                 local new_layer_x, new_layer_y = layer_x + x - touch_begin_point.x, layer_y + y - touch_begin_point.y
@@ -289,11 +321,21 @@ function SceneBase:RegisterTouchEvent()
 
     local function onTouchEnded(touches)
         local nX, nY = cc_layer_main:getPosition()
+<<<<<<< HEAD
     	if #touches == 3 then
 	        if self.OnTouchEnded then
 	        	local x, y = touches[1], touches[2]
 	    		self:OnTouchEnded(x - nX, y - nY)
 	    	end
+=======
+        if x == touchStartPoint.x and y == touchStartPoint.y then
+        	if self.OnClick then
+        		self:OnClick(x - nX, y - nY)
+        	end
+        end
+        if self:CanPick() == 1 then
+        	PhysicsWorld:MouseUp((x - nX) / self.scale,  (y - nY) / self.scale)
+>>>>>>> dd21e3327ffed3731bf4670c83cb3c5cad27d6c8
         end
         touch_begin_points = {}
         touch_start_points = {}
@@ -325,6 +367,7 @@ function SceneBase:MoveMainLayer(position_x, position_y)
 	if self:IsLimitDrag() == 1 then
         position_x, position_y = self:GetModifyPosition(position_x, position_y)
     end
+<<<<<<< HEAD
     print(position_x, position_y)
     cc_layer_main:setPosition(position_x, position_y)
 end
@@ -333,6 +376,14 @@ function SceneBase:GetModifyPosition(position_x, position_y)
 	local min_x, max_x = tb_visible_size.width - self:GetWidth() , 0
     local min_y, max_y = tb_visible_size.height - self:GetHeight(),  0
     print(min_x, max_x, min_y, max_y)
+=======
+    cc_layer_main:setPosition(position_x * self.scale, position_y * self.scale)
+end
+
+function SceneBase:GetModifyPosition(position_x, position_y)
+	local min_x, max_x = (tb_visible_size.width - self:GetWidth()), 0
+    local min_y, max_y = (tb_visible_size.height - self:GetHeight()),  0
+>>>>>>> dd21e3327ffed3731bf4670c83cb3c5cad27d6c8
     if position_x < min_x then
         position_x = min_x
     elseif position_x > max_x then
@@ -345,6 +396,13 @@ function SceneBase:GetModifyPosition(position_x, position_y)
         position_y = max_y
     end
     return position_x, position_y
+end
+
+function SceneBase:SetScale(scale)
+	local cc_layer_main = self:GetLayer("main")
+	self.scale = scale
+	print(self.scale)
+	cc_layer_main:setScale(scale)
 end
 
 function SceneBase:Reload()
