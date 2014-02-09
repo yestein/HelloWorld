@@ -11,7 +11,7 @@ Scene.tb_property = {
 	can_pick      = 1,--可用鼠标拖拽物理刚体
 	can_drag      = 1,--可拖拽屏幕
 	limit_drag    = 1,--拖拽屏幕是否受限制（仅在场景范围内拖拽）
-	-- debug_physics = 1, --是否显示物理引擎调试绘制
+	debug_physics = 1, --是否显示物理引擎调试绘制
 }
 
 Scene:DeclareListenEvent("Bomb", "OnBomb")
@@ -164,7 +164,7 @@ function Scene:CreateMap()
     cc_clipping_map_ground:addChild(pEdge)
     self.pEdge = pEdge    
 
-    cc_layer_main:addChild(cc_clipping_background, Def.ZOOM_LEVEL_WORLD)
+    cc_layer_main:addChild(cc_clipping_background)
     cc_clipping_background:addChild(cc_clipping_map_ground)
     cc_clipping_map_ground:addChild(physics_sprite_ground)	
 end

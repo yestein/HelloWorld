@@ -73,7 +73,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "详细爆炸受力分析测试",
                 fnCallBack = function()
-                    tbMainScene:SysMsg("功能暂未开放", "red")
+                    Ui:SysMsg(self:GetUI(), "功能暂未开放", "red")
                 end,
             },
         },
@@ -81,7 +81,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "AI测试",
                 fnCallBack = function()
-                    tbMainScene:SysMsg("功能暂未开放", "red")
+                    Ui:SysMsg(self:GetUI(),"功能暂未开放", "red")
                 end,
             },
         },
@@ -89,7 +89,7 @@ function MainScene:_Init()
             [1] = {
                 szItemName = "联机测试",
                 fnCallBack = function()
-                    tbMainScene:SysMsg("功能暂未开放", "red")
+                    Ui:SysMsg(self:GetUI(),"功能暂未开放", "red")
                 end,
             },
         },

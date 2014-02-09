@@ -46,7 +46,7 @@ function Ui:InitScene(str_scene_name, cc_scene)
 	local cc_layer_ui = CCLayer:create()        
 
     for i = 1, Ui.MSG_MAX_COUNT do
-        local cc_labelttf_sysmsg = CCLabelTTF:create("系统提示", szTitleFontName, 18)
+        local cc_labelttf_sysmsg = CCLabelTTF:create("系统提示", szTitleFontName, 60)
         cc_layer_ui:addChild(cc_labelttf_sysmsg)
         local tbMsgRect = cc_labelttf_sysmsg:getTextureRect()
         cc_labelttf_sysmsg:setPosition(tb_size_visible.width / 2, tb_size_visible.height / 2 - (2 - i) * tbMsgRect.height)
@@ -172,7 +172,7 @@ function Ui:SysMsg(tb_ui, szMsg, str_color)
             cc_labelttf_sysmsg:runAction(CCFadeOut:create(3))
         end
         local tbMsgRect = cc_labelttf_sysmsg:getTextureRect()
-        cc_labelttf_sysmsg:setPosition(tb_size_visible.width / 2, tb_size_visible.height / 2 + (i + 3) * tbMsgRect.height)
+        cc_labelttf_sysmsg:setPosition(tb_size_visible.width / 2, tb_size_visible.height / 2 + i * tbMsgRect.height)
     end
     tb_ui.index_sysmsg = tb_ui.index_sysmsg + 1
     if tb_ui.index_sysmsg > self.MSG_MAX_COUNT then

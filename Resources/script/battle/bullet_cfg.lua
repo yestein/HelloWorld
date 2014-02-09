@@ -17,7 +17,7 @@ Bullet.tb_cfg = {
 		density = 0.01,
 		power_linear = 100000,
 		power_angular = 150000,
-		destroy_range = 0,
+		destroy_range = 30,
 		bomb_range = 50,
 		damage = 100,
 	},

@@ -22,7 +22,7 @@ function Performance:Init(layer)
     self.tbFlyLabel = {}
     self.nDamageIndex = 1
 	for i = 1, self.MAX_DISPLAY_DAMAGE do
-		local labelFly = CCLabelTTF:create("-100", szFlyLabelFont, 18)
+		local labelFly = CCLabelTTF:create("-100", szFlyLabelFont, 60)
         layer:addChild(labelFly, 10)
         labelFly:setVisible(false)
         self.tbFlyLabel[i] = labelFly
@@ -77,9 +77,6 @@ function Performance:OnCharacterAdd(pSprite, hp)
 	local tbSpriteSize = pSprite:getContentSize()
 	local spriteHP = cc.Sprite:create("image/blood.png")
 	local progressHP = CCProgressTimer:create(spriteHP)
-	if pSprite:getChildByTag(326) then
-		pSprite:removeChildByTag(326, true)
-	end
 	local progressSize = spriteHP:getContentSize()
 	progressHP:setType(1)
 	progressHP:setMidpoint(cc.p(0, 0.5))
