@@ -22,8 +22,7 @@ end
 function Scene:_Init()
 	local cc_layer_main = self:GetLayer("main")
 	local tbVisibleSize = CCDirector:getInstance():getVisibleSize()
-	local PhysicsWorld = self:GetPhysicsWorld()
-    
+
     local sprite_background = GameSprite:create("image/background.png")
     cc_layer_main:addChild(sprite_background)
     sprite_background:setAnchorPoint(cc.p(0, 0))
@@ -71,8 +70,17 @@ function Scene:_Init()
     return 1
 end
 
-function Scene:OnClick(x, y)
-    self:BreakPolygon(x, y)
+function Scene:OnTouchBegan(x, y)
+    return Physics:OnMouseDown(x, y)
+end
+
+function Scene:OnTouchMoved(x, y)
+    return Physics:OnMouseMoved(x, y)
+end
+
+function Scene:OnTouchEnded(x, y)
+    Physics:OnMouseEnded(x, y)
+    return self:BreakPolygon(x, y)
 end
 
 function Scene:BreakPolygon(x, y)

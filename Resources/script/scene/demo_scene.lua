@@ -66,8 +66,20 @@ function Scene:_Init()
 
     BattleLogic:Init(self.tb_enemy)
 	self.is_run = 1
-	self:SetScale(0.8)
+	-- self:SetScale(0.8)
     return 1
+end
+
+function Scene:OnTouchBegan(x, y)
+    return Physics:OnMouseDown(x, y)
+end
+
+function Scene:OnTouchMoved(x, y)
+    return Physics:OnMouseMoved(x, y)
+end
+
+function Scene:OnTouchEnded(x, y)
+    return Physics:OnMouseEnded(x, y)
 end
 
 function Scene:SetFocus(is_need_focus)

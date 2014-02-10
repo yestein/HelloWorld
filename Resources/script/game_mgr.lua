@@ -15,8 +15,18 @@ GameMgr.TIME_PER_FRAME = 1 / GameMgr.LOGIC_FPS
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
 function GameMgr:Init()
+	assert(Physics:Init() == 1)
 	GameMgr.num_frame = 0
 	GameMgr.accumulate = 0
+
+	if _DEBUG then
+    	assert(SceneMgr:CheckAllClass() == 1)
+    end
+	local tbMainScene = SceneMgr:CreateScene("MainScene", "MainScene")
+	assert(tbMainScene)
+	local cc_scene = tbMainScene:GetCCObj()
+	assert(cc_scene)
+    CCDirector:getInstance():runWithScene(cc_scene)
 	return 1
 end
 

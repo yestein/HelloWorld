@@ -92,7 +92,20 @@ function Scene:_Init()
 
     self:SetWidth(width_scene)
     self:SetHeight(height_scene)
-    self:SetScale(0.5)
+    -- self:SetScale(1)
     return 1
 end
+
+function Scene:OnTouchBegan(x, y)
+    return Physics:OnMouseDown(x, y)
+end
+
+function Scene:OnTouchMoved(x, y)
+    return Physics:OnMouseMoved(x, y)
+end
+
+function Scene:OnTouchEnded(x, y)
+    return Physics:OnMouseEnded(x, y)
+end
+
 

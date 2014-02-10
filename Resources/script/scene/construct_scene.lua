@@ -42,6 +42,18 @@ function Scene:_Init()
 	return 1
 end
 
+function Scene:OnTouchBegan(x, y)
+    return Physics:OnMouseDown(x, y)
+end
+
+function Scene:OnTouchMoved(x, y)
+    return Physics:OnMouseMoved(x, y)
+end
+
+function Scene:OnTouchEnded(x, y)
+    return Physics:OnMouseEnded(x, y)
+end
+
 function Scene:TestCrawlerBelt()
 	local tb_visible_size = CCDirector:getInstance():getVisibleSize()
 	local cc_layer_main = self:GetLayer("main")
