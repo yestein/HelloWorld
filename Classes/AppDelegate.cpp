@@ -56,7 +56,7 @@ bool AppDelegate::applicationDidFinishLaunching()
     auto director = Director::getInstance();
     director->setOpenGLView(EGLView::getInstance());
 
-    EGLView::getInstance()->setDesignResolutionSize(960, 640, ResolutionPolicy::NO_BORDER);
+    EGLView::getInstance()->setDesignResolutionSize(1136, 640, ResolutionPolicy::NO_BORDER);
 
     // turn on display FPS
     director->setDisplayStats(true);
@@ -77,7 +77,7 @@ bool AppDelegate::applicationDidFinishLaunching()
 	engine->executeString("device = \"win32\"");
 #endif
 
-    std::string path = FileUtils::getInstance()->fullPathForFilename("script/main.lua");
+    std::string path = FileUtils::getInstance()->fullPathForFilename("framework/main.lua");
     engine->executeScriptFile(path.c_str());
     LuaBombCallBack* ptr_lua_callback = new LuaBombCallBack();
     GamePhysicsWorld::GetInstance()->SetupBombCallBack(ptr_lua_callback);

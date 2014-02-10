@@ -21,9 +21,6 @@ function GameMgr:Init()
 
 	Debug:AddBlackEvent("PowerChanged")
 
-	if _DEBUG then
-    	assert(SceneMgr:CheckAllClass() == 1)
-    end
 	local tbMainScene = SceneMgr:CreateScene("MainScene", "MainScene")
 	assert(tbMainScene)
 	local cc_scene = tbMainScene:GetCCObj()
