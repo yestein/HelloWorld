@@ -7,11 +7,12 @@
 
 local Scene = SceneMgr:GetClass("DemoScene", 1)
 Scene.tb_property = {
-	can_touch     = 1,--可接受触摸事件
-	can_pick      = 1,--可用鼠标拖拽物理刚体
-	can_drag      = 1,--可拖拽屏幕
-	limit_drag    = 1,--拖拽屏幕是否受限制（仅在场景范围内拖拽）
+	can_touch     = 1, --可接受触摸事件
+	can_pick      = 1, --可用鼠标拖拽物理刚体
+	can_drag      = 1, --可拖拽屏幕
+	limit_drag    = 1, --拖拽屏幕是否受限制（仅在场景范围内拖拽）
 	debug_physics = 1, --是否显示物理引擎调试绘制
+	can_scale     = 1, --可缩放
 }
 
 Scene:DeclareListenEvent("Bomb", "OnBomb")
@@ -66,7 +67,7 @@ function Scene:_Init()
     BattleLogic:Init(self.tb_enemy)
 	self.is_run = 1
 	self:SetScale(2)
-	
+
 	self:FocusSprite(body)
     return 1
 end

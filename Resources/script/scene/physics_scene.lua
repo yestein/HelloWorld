@@ -7,9 +7,10 @@
 
 local Scene = SceneMgr:GetClass("PhysicsScene", 1)
 Scene.tb_property = {
-    can_touch  = 1,--可接受触摸事件
-    can_pick   = 1,--可用鼠标拖拽物理刚体
-    can_drag   = 1,--可拖拽屏幕
+    can_touch     = 1, --可接受触摸事件
+    can_pick      = 1, --可用鼠标拖拽物理刚体
+    can_drag      = 1, --可拖拽屏幕
+    can_scale     = 1, --可缩放
     debug_physics = 1, --是否显示物理引擎调试绘制
 }
 
