@@ -61,12 +61,13 @@ function Scene:_Init()
     local body = Player:GetBody()
 	if not body then
 		return
-	end
-	self:FocusSprite(body)
+	end	
 
     BattleLogic:Init(self.tb_enemy)
 	self.is_run = 1
-	-- self:SetScale(0.8)
+	self:SetScale(2)
+	
+	self:FocusSprite(body)
     return 1
 end
 
@@ -92,7 +93,8 @@ end
 
 function Scene:FocusSprite(sprite)
 	local x, y = sprite:getPosition()
-	self:MoveCamera(x, y)
+	local scale = self:GetScale()
+	self:MoveCamera(x * scale, y * scale)
 end
 
 function Scene:OnLoop(delta)
@@ -336,7 +338,8 @@ function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
 	local action_move_right = cc.MoveBy:create(0.02, cc.p(3, 0))
 	local action_delay_time = cc.DelayTime:create(1)
 	local x, y = Player:GetPosition()
-	local modify_x, modify_y = self:GetModifyPosition(tb_size_visible.width / 2 - x, tb_size_visible.height / 2 - y)
+	local scale = self:GetScale()
+	local modify_x, modify_y = self:GetModifyPosition(tb_size_visible.width / 2 - x * scale, tb_size_visible.height / 2 - y * scale)
 	local action_move_to = cc.MoveTo:create(0.5, cc.p(modify_x, modify_y))
 	local action_callback = cc.CallFunc:create(RecoverUI)
 	local sequence_actions = cc.Sequence:create(

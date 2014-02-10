@@ -92,7 +92,7 @@ function Scene:_Init()
 
     self:SetWidth(width_scene)
     self:SetHeight(height_scene)
-    -- self:SetScale(1)
+    self:SetScale(0.5)
     return 1
 end
 

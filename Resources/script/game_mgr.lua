@@ -19,6 +19,8 @@ function GameMgr:Init()
 	GameMgr.num_frame = 0
 	GameMgr.accumulate = 0
 
+	Debug:AddBlackEvent("PowerChanged")
+
 	if _DEBUG then
     	assert(SceneMgr:CheckAllClass() == 1)
     end
