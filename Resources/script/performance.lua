@@ -53,7 +53,7 @@ end
 
 function Performance:RegistEvent()
 	if not self.nRegCharacterAdd then
-		Event:RegistEvent("CharacterAdd", self.OnCharacterAdd, self)
+		self.nRegCharacterAdd = Event:RegistEvent("CharacterAdd", self.OnCharacterAdd, self)
 	end
 
 	if not self.nRegHPChanged then
@@ -73,7 +73,12 @@ function Performance:UnRegistEvent()
 	end
 end
 
-function Performance:OnCharacterAdd(pSprite, hp)
+function Performance:OnCharacterAdd(id, hp)
+	local character = CharacterMgr:GetById(id)
+	if not character then
+		return
+	end
+	local pSprite = character:GetBody()
 	local tbSpriteSize = pSprite:getContentSize()
 	local spriteHP = cc.Sprite:create("image/blood.png")
 	local progressHP = CCProgressTimer:create(spriteHP)
@@ -88,11 +93,21 @@ function Performance:OnCharacterAdd(pSprite, hp)
     progressHP:setPosition(tbSpriteSize.width / 2, tbSpriteSize.height + 20)
     -- progressHP:setVisible(false)
     pSprite:addChild(progressHP)
-    self.hp[pSprite] = progressHP
+    character:SetProgressHP(progressHP)
 end
 
+function Performance:OnCharacterHPChanged(id, nBeforeHP, nAfterHP, nMaxHP)
+	local character = CharacterMgr:GetById(id)
+	if not character then
+		return
+	end
 
-function Performance:OnCharacterHPChanged(pSprite, nBeforeHP, nAfterHP, nMaxHP)
+	local pSprite = character:GetBody()
+	local progressHP = character:GetProgressHP()
+	if progressHP then
+		progressHP:setPercentage(nAfterHP * 100 / nMaxHP)
+	end	
+
 	local nDamage = nAfterHP - nBeforeHP
 	local color = nil
 	local szMsg = nil
@@ -105,14 +120,6 @@ function Performance:OnCharacterHPChanged(pSprite, nBeforeHP, nAfterHP, nMaxHP)
 		color = Def.tbColor["red"]
 		szMsg = "+"..tostring(nDamage)
 	end
-
-	local progressHP = self.hp[pSprite]
-	if not progressHP then
-		assert(false)
-		return
-	end
-	progressHP:setPercentage(nAfterHP * 100 / nMaxHP)
-
 
 	local nX, nY = pSprite:getPosition()
 	local label = self:GetAvaiableFlyLabel()

@@ -6,7 +6,7 @@
 --===================================================
 
 local Scene = SceneMgr:GetClass("DemoScene", 1)
-Scene.tb_property = {
+Scene.property = {
 	can_touch     = 1, --可接受触摸事件
 	can_pick      = 1, --可用鼠标拖拽物理刚体
 	can_drag      = 1, --可拖拽屏幕
@@ -26,12 +26,12 @@ local PhysicsWorld = GamePhysicsWorld:GetInstance()
 local tb_size_visible = CCDirector:getInstance():getVisibleSize()
 
 function Scene:_Uninit()
+	self.is_run = nil
 	local cc_layer_main = self:GetLayer("main")
-	BattleLogic:Uninit()
 	Player:Uninit()
 	Enemy:Uninit()
-	Performance:Uninit(cc_layer_main)
-	self.is_run = nil
+	BattleLogic:Uninit()	
+	Performance:Uninit(cc_layer_main)	
 end
 
 function Scene:_Init()
@@ -41,8 +41,9 @@ function Scene:_Init()
 
 	local cc_layer_main = self:GetLayer("main")
 	Performance:Init(cc_layer_main)
-	self:LoadControlUI()
+	BattleLogic:Init()
 
+	self:LoadControlUI()
 	self:CreateMap()
 
 	self:SetFocus(0)
@@ -62,11 +63,9 @@ function Scene:_Init()
     local body = Player:GetBody()
 	if not body then
 		return
-	end	
-
-    BattleLogic:Init(self.tb_enemy)
+	end
+    
 	self.is_run = 1
-	self:SetScale(2)
 
 	self:FocusSprite(body)
     return 1
@@ -125,10 +124,6 @@ function Scene:OnLoop(delta)
 		return
 	end
 	image_tablet:setRotation(rotation_body)
-end
-
-function Scene:OnClick(x, y)
-	print(x, y)
 end
 
 function Scene:CreateMap()
@@ -219,6 +214,68 @@ function Scene:SetUIEnable(enable)
 	end
 end
 
+function Scene:OnButtonBegan(widget_button)
+	local str_button_name = widget_button:getName()
+	if str_button_name == "button_left" then
+		Player:StartMove("left")
+		self:SetFocus(1)
+	elseif str_button_name == "button_right" then
+		Player:StartMove("right")
+		self:SetFocus(1)
+	elseif str_button_name == "button_up" then
+		Player:StartAdjust("up")
+	elseif str_button_name == "button_down" then
+		Player:StartAdjust("down")
+	elseif str_button_name == "button_luanch" then
+		Player:ReadyToAttack()
+	end
+end
+
+function Scene:OnButtonMoved(widget_button)
+
+end
+
+function Scene:OnButtonEnded(widget_button)
+	local str_button_name = widget_button:getName()
+	if str_button_name == "button_left" then
+		Player:StopMove()
+		self:SetFocus(0)
+	elseif str_button_name == "button_right" then
+		Player:StopMove()
+		self:SetFocus(0)
+	elseif str_button_name == "button_up" then
+		Player:StopAdjust()
+	elseif str_button_name == "button_down" then
+		Player:StopAdjust()
+	elseif str_button_name == "button_luanch" then
+		Player:Attack()
+	end
+end
+
+function Scene:OnButtonCanceled(widget_button)
+	local str_button_name = widget_button:getName()
+	if str_button_name == "button_left" then
+		Player:StopMove()
+		self:SetFocus(0)
+	elseif str_button_name == "button_right" then
+		Player:StopMove()
+		self:SetFocus(0)
+	elseif str_button_name == "button_up" then
+		Player:StopAdjust()
+	elseif str_button_name == "button_down" then
+		Player:StopAdjust()
+	elseif str_button_name == "button_luanch" then
+		Player:Attack()
+	end
+end
+
+Scene.func_button_event = {
+	[Ui.TOUCH_EVENT_BEGAN] = Scene.OnButtonBegan,
+	[Ui.TOUCH_EVENT_MOVED] = Scene.OnButtonMoved,
+	[Ui.TOUCH_EVENT_ENDED] = Scene.OnButtonEnded,
+	[Ui.TOUCH_EVENT_CANCELED] = Scene.OnButtonCanceled,
+}
+
 function Scene:OnWeaponRotate(rotation)
 	local label_angel = self.uilayer_control:getWidgetByName("label_angel")
 	if not label_angel then
@@ -302,14 +359,6 @@ function Scene:OnAttack(tb_bullet_property)
     self.physics_sprite_bullet = physics_sprite_bullet
 end
 
-function Scene:SetGroundSprite(ground)
-	self.physics_sprite_ground = ground
-end
-
-function Scene:GetGroundSprite()
-	return self.physics_sprite_ground
-end
-
 function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
 	local cc_layer_main = self:GetLayer("main")
 	local bullet_type = sprite_bullet:GetBulletType()
@@ -327,12 +376,8 @@ function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
     bomb_sprite:runAction(cc.Sequence:create(action_scale, action_delay_time, action_remove_self))
 
     function RecoverUI()
-		if Player:GetHP() <= 0 or Enemy:GetHP() <= 0 then
-			self:OnGameOver()
-		else
-			self.uilayer_control:setVisible(true)
-			self:SetUIEnable(true)
-		end
+		self.uilayer_control:setVisible(true)
+		self:SetUIEnable(true)
 	end
 	
 	local action_move_left = cc.MoveBy:create(0.02, cc.p(-3, 0))
@@ -378,69 +423,24 @@ function Scene:OnBomb(sprite_bullet, float_bomb_x, float_bomb_y)
 	end
 end
 
-function Scene:OnButtonBegan(widget_button)
-	local str_button_name = widget_button:getName()
-	if str_button_name == "button_left" then
-		Player:StartMove("left")
-		self:SetFocus(1)
-	elseif str_button_name == "button_right" then
-		Player:StartMove("right")
-		self:SetFocus(1)
-	elseif str_button_name == "button_up" then
-		Player:StartAdjust("up")
-	elseif str_button_name == "button_down" then
-		Player:StartAdjust("down")
-	elseif str_button_name == "button_luanch" then
-		Player:ReadyToAttack()
-	end
+function Scene:SetGroundSprite(ground)
+	self.physics_sprite_ground = ground
 end
 
-function Scene:OnButtonMoved(widget_button)
-
+function Scene:GetGroundSprite()
+	return self.physics_sprite_ground
 end
-
-function Scene:OnButtonEnded(widget_button)
-	local str_button_name = widget_button:getName()
-	if str_button_name == "button_left" then
-		Player:StopMove()
-		self:SetFocus(0)
-	elseif str_button_name == "button_right" then
-		Player:StopMove()
-		self:SetFocus(0)
-	elseif str_button_name == "button_up" then
-		Player:StopAdjust()
-	elseif str_button_name == "button_down" then
-		Player:StopAdjust()
-	elseif str_button_name == "button_luanch" then
-		Player:Attack()
-	end
-end
-function Scene:OnButtonCanceled(widget_button)
-	local str_button_name = widget_button:getName()
-	if str_button_name == "button_left" then
-		Player:StopMove()
-		self:SetFocus(0)
-	elseif str_button_name == "button_right" then
-		Player:StopMove()
-		self:SetFocus(0)
-	elseif str_button_name == "button_up" then
-		Player:StopAdjust()
-	elseif str_button_name == "button_down" then
-		Player:StopAdjust()
-	elseif str_button_name == "button_luanch" then
-		Player:Attack()
-	end
-end
-
-Scene.func_button_event = {
-	[Ui.TOUCH_EVENT_BEGAN] = Scene.OnButtonBegan,
-	[Ui.TOUCH_EVENT_MOVED] = Scene.OnButtonMoved,
-	[Ui.TOUCH_EVENT_ENDED] = Scene.OnButtonEnded,
-	[Ui.TOUCH_EVENT_CANCELED] = Scene.OnButtonCanceled,
-}
 
 function Scene:OnBeBombed(bomb, target)
-	if target ~= Player:GetBody() and target ~= Enemy:GetBody() then
+	local target_id = target:getTag()
+	if target_id < 0 then
+		return
+	end
+	local character = CharacterMgr:GetById(target_id)
+	if not character then
+		return
+	end
+	if target ~= character:GetBody() then
 		return
 	end
 	local bomb_x, bomb_y = bomb:getPosition()
@@ -463,19 +463,7 @@ function Scene:OnBeBombed(bomb, target)
 
 	local bullet_type = bomb:GetBulletType()
 	local damage = Bullet:GetDamage(bullet_type)
-	local cur_hp, new_hp
-	if target == Player:GetBody() then
-		cur_hp = Player:GetHP()
-		new_hp = cur_hp - damage
-		Player:SetHP(new_hp)
-	else
-		cur_hp = Enemy:GetHP()
-		new_hp = cur_hp - damage
-		Enemy:SetHP(new_hp)
-	end
-	Event:FireEvent("CharacterHPChanged", target, cur_hp, new_hp, 1000)
-	
-	Event:FireEvent("BeBombDamage", bomb, target)
+	character:ChangeHP(-damage)
 end
 
 function Scene:OnGameOver()

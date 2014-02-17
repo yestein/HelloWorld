@@ -32,6 +32,17 @@ Bullet.tb_cfg = {
 		bomb_range = 30,
 		damage = 200,
 	},
+	[2] = {
+		image = "image/icon.png",
+		scale = 0.5,
+		density = 0.01,
+		power_linear = 100000,
+		power_angular = 150000,
+		destroy_range = 30,
+		destroy_num = 3,
+		bomb_range = 30,
+		damage = 200,
+	},
 }
 
 function Bullet:GetCfg(bullet_type)

@@ -14,11 +14,12 @@ local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
 function BattleLogic:Init()
 	self.is_run = 1
-	
+	CharacterMgr:Init()
 end
 
 function BattleLogic:Uninit()
 	self.is_run = 0
+	CharacterMgr:Uninit()
 end
 
 --逻辑帧

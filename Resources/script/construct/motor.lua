@@ -25,11 +25,11 @@ end
 
 function Motor:Create(motor_type, cc_layer, x, y, physics_sprite_body, tb_tobe_gear, visible)
 	local tb_ret = { motor_type = motor_type}
-	local tb_property = {
+	local property = {
 		category_bits = Physics.GROUP_MOTOR,
 		mask_bits     = Physics.MASK_MOTOR,
 	}
-	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", x, y, tb_property)
+	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", x, y, property)
 	
 	cc_layer:addChild(motor)
 	tb_ret.motor = motor
@@ -41,8 +41,8 @@ function Motor:Create(motor_type, cc_layer, x, y, physics_sprite_body, tb_tobe_g
     assert(joint_motor_body)
     tb_ret.joint_motor_body = joint_motor_body
 
-    tb_property.friction = 100
-	local brake, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+    property.friction = 100
+	local brake, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, property)
 
 	cc_layer:addChild(brake)
 	tb_ret.brake = brake
@@ -54,7 +54,7 @@ function Motor:Create(motor_type, cc_layer, x, y, physics_sprite_body, tb_tobe_g
     )
     assert(joint_brake_body)
 
-    local brake1, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+    local brake1, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, property)
 
 	cc_layer:addChild(brake1)
 	tb_ret.brake1 = brake1

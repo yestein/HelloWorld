@@ -29,6 +29,7 @@ function Construct:BuildTank(cc_layer, tank_x, tank_y, tb_param)
 	tb_ret.body = physics_sprite_body    
 
 	local weapon_type = tb_param.weapon_type
+	tb_ret.weapon_type = weapon_type
     if weapon_type then
     	tb_ret.weapon = Weapon:Create(weapon_type, physics_sprite_body, 15, 40)
     end	
@@ -59,9 +60,9 @@ function Construct:BuildTank(cc_layer, tank_x, tank_y, tb_param)
 			joint = tb_crawler_belt.tb_joint.wheel_front,
 		},
 	}
-
-	tb_ret.tb_motor = Motor:Create(motor_type, cc_layer, tank_x, tank_y, physics_sprite_body, tb_tobe_gear)
-
+	
+	tb_ret.motor = Motor:Create(motor_type, cc_layer, tank_x, tank_y, physics_sprite_body, tb_tobe_gear)
+	tb_ret.motor_type = motor_type
     return tb_ret
 end
 
@@ -76,9 +77,9 @@ function Construct:Create(cc_layer, offset_x, offset_y, tb)
 			local body_type = cfg[1]
 			local image_path = cfg[2]		
 			local x, y = pos(cfg[3], cfg[4])
-			local tb_property = cfg[5]
+			local property = cfg[5]
 
-			tb_body[body_name] = Physics:CreateBody(body_type, image_path, x, y, tb_property)
+			tb_body[body_name] = Physics:CreateBody(body_type, image_path, x, y, property)
 			local z_level  = cfg[6]
 			if z_level then
 				cc_layer:addChild(tb_body[body_name], z_level)

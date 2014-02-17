@@ -19,6 +19,8 @@ require("script/construct/weapon.lua")
 require("script/construct/movement/wheel_crawler.lua")
 require("script/construct/movement/spider.lua")
 
+require("script/battle/character.lua")
+require("script/battle/character_mgr.lua")
 require("script/battle/player.lua")
 require("script/battle/enemy.lua")
 require("script/battle/battle_logic.lua")

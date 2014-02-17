@@ -8,7 +8,7 @@
 
 local Scene = SceneMgr:GetClass("PolygonBreak", 1)
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
-Scene.tb_property = {
+Scene.property = {
     can_touch  = 1,--可接受触摸事件
     can_pick   = 1,--可用鼠标拖拽物理刚体
     can_drag = 1,
@@ -54,8 +54,10 @@ function Scene:_Init()
     cc_layer_main:addChild(clippingNodeBG)
     clippingNodeBG:addChild(clippingNode)
 
+    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
     assert(PhysicsWorld:LoadPolygonBodyFromFile("physics/map.plist") == 1)
-    assert(PhysicsWorld:SetPolygonBodyWithShapeName(gamesprite_map, "map1", 0, 0, 0) == 1)
+
+    assert(PhysicsWorld:SetBoxBody(gamesprite_map, 100, 100, m, 0, 0, 0) == 1)
     self.test_polygon = gamesprite_map
 
     local pFrontWheel = GameSprite:create("image/circle.png")
@@ -65,7 +67,7 @@ function Scene:_Init()
     cc_layer_main:addChild(pFrontWheel)
 
     local float_radius = pFrontWheel:getContentSize().width * 0.5;
-    local m = GamePhysicsWorld.MATERIAL:new(1, 0.2, 0.5)
+    
     PhysicsWorld:SetCircleBody(pFrontWheel, float_radius, m, 0, 0, 1)
     return 1
 end
@@ -85,7 +87,7 @@ end
 
 function Scene:BreakPolygon(x, y)
 	local polygon = self.test_polygon
-    PhysicsWorld:ClipperPolygonByCircle(polygon, 30, 20, x, y)
+    PhysicsWorld:ClipperPolygonByShape(polygon, "tank_2", x, y)
 
     local pSprite = cc.Sprite:create("image/hole-erase.png")
     pSprite:setPosition(x, y) 

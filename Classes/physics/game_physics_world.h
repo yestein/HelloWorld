@@ -78,6 +78,10 @@ public:
         return TRUE;
     }
 
+    BOOL SetBodyCenter(
+
+    );
+
     BOOL CreateRectEdge(
         GameSprite* ptr_sprite,
         float float_left,
@@ -98,6 +102,14 @@ public:
         uint16 groupIndex = 0,
         uint16 categoryBits = 0x0001,
         uint16 maskBits = 0xFFFF
+    );
+
+    BOOL SetPolygonBody(
+        GameSprite* ptr_sprite,
+        const std::string &shape_name,
+        float float_offset_x,
+        float float_offset_y,
+        BOOL bool_dynamic_body
     );
 
 
@@ -268,7 +280,14 @@ public:
         int int_precision,
         float float_position_x,
         float float_position_y
-    );    
+    );
+
+    BOOL ClipperPolygonByShape(
+        GameSprite* ptr_gamesprite,
+        const std::string &shape_name,
+        float float_position_x,
+        float float_position_y
+        );
 
     b2World* GetWorld(){ return m_ptr_b2world;}
 

@@ -11,11 +11,11 @@ end
 
 local PhysicsWorld = GamePhysicsWorld:GetInstance()
 
-function Physics:CreateBody(body_type, image_path, x, y, tb_property)
+function Physics:CreateBody(body_type, image_path, x, y, property)
 	if body_type == "box" then
-		return self:CreateBoxSprite(image_path, x, y, tb_property)
+		return self:CreateBoxSprite(image_path, x, y, property)
 	elseif body_type == "circle" then
-		return self:CreateCircleSprite(image_path, x, y, tb_property)
+		return self:CreateCircleSprite(image_path, x, y, property)
 	elseif body_type =="polygon" then
 		return self:CreatePolygonSprite(image_path, x, y)
 	end
@@ -64,18 +64,18 @@ function Physics:CreateJoint(joint_type, body_a, body_b, tb_param)
 	end
 end
 
-function Physics:CreateBoxSprite(str_image_path, x, y, tb_property)
-	if not tb_property then
-		tb_property = {}
+function Physics:CreateBoxSprite(str_image_path, x, y, property)
+	if not property then
+		property = {}
 	end
-	local scale = tb_property.scale or 1
-	local density = tb_property.density or 1
-	local friction = tb_property.friction or 0.5
-	local restitution = tb_property.restitution or 0.5
-	local is_bullet = tb_property.is_bullet or 0
-	local group_index = tb_property.group_index or 0
-	local category_bits = tb_property.category_bits or 0x0001
-	local mask_bits = tb_property.mask_bits or 0xFFFF
+	local scale = property.scale or 1
+	local density = property.density or 1
+	local friction = property.friction or 0.5
+	local restitution = property.restitution or 0.5
+	local is_bullet = property.is_bullet or 0
+	local group_index = property.group_index or 0
+	local category_bits = property.category_bits or 0x0001
+	local mask_bits = property.mask_bits or 0xFFFF
 
 	local physics_sprite = GameSprite:create(str_image_path)
 	physics_sprite:setPosition(x, y)
@@ -96,18 +96,18 @@ function Physics:CreateBoxSprite(str_image_path, x, y, tb_property)
     return physics_sprite, width_sprite, height_sprite
 end
 
-function Physics:CreateCircleSprite(str_image_path, x, y, tb_property)
-	if not tb_property then
-		tb_property = {}
+function Physics:CreateCircleSprite(str_image_path, x, y, property)
+	if not property then
+		property = {}
 	end
-	local scale = tb_property.scale or 1
-	local density = tb_property.density or 1
-	local friction = tb_property.friction or 0.5
-	local restitution = tb_property.restitution or 0.5
-	local is_bullet = tb_property.is_bullet or 0
-	local group_index = tb_property.group_index or 0
-	local category_bits = tb_property.category_bits or 0x0001
-	local mask_bits = tb_property.mask_bits or 0xFFFF
+	local scale = property.scale or 1
+	local density = property.density or 1
+	local friction = property.friction or 0.5
+	local restitution = property.restitution or 0.5
+	local is_bullet = property.is_bullet or 0
+	local group_index = property.group_index or 0
+	local category_bits = property.category_bits or 0x0001
+	local mask_bits = property.mask_bits or 0xFFFF
 
 	local physics_sprite = GameSprite:create(str_image_path)
 	physics_sprite:setPosition(x, y)
@@ -144,11 +144,11 @@ end
 
 function Physics:CreateMotor(cc_layer, x, y, physics_sprite_body)
 	local tb_ret = {}
-	local tb_property = {
+	local property = {
 		category_bits = Physics.GROUP_MOTOR,
 		mask_bits     = Physics.MASK_MOTOR,
 	}
-	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", x, y, tb_property)
+	local motor, radius_motor = Physics:CreateCircleSprite("image/circle.png", x, y, property)
 	motor:setVisible(false)
 	cc_layer:addChild(motor)
 	tb_ret.motor = motor
@@ -160,8 +160,8 @@ function Physics:CreateMotor(cc_layer, x, y, physics_sprite_body)
     assert(joint_motor_body)
     tb_ret.joint_motor_body = joint_motor_body
 
-    tb_property.friction = 100
-	local brake, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+    property.friction = 100
+	local brake, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, property)
 	brake:setVisible(false)
 	cc_layer:addChild(brake)
 	tb_ret.brake = brake
@@ -173,7 +173,7 @@ function Physics:CreateMotor(cc_layer, x, y, physics_sprite_body)
     )
     assert(joint_brake_body)
 
-    local brake1, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, tb_property)
+    local brake1, width_brake, height_brake = Physics:CreateBoxSprite("image/rect1.png", x , y + radius_motor + 15, property)
 	brake1:setVisible(false)
 	cc_layer:addChild(brake1)
 	tb_ret.brake1 = brake1

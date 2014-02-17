@@ -15,65 +15,78 @@ function Player:Init(cc_layer, hp, x, y, tb_construct)
 	self.hp = hp
 	self.x = x
 	self.y = y
-	self.tb_sprite = Construct:BuildTank(cc_layer, x, y, tb_construct)
-	self.body = self.tb_sprite.body
-	self.weapon = self.tb_sprite.weapon
-	self.tb_motor = self.tb_sprite.tb_motor
-	self.weapon_type = tb_construct.weapon_type
-	self.motor_type = tb_construct.weapon_type
-
 	self.str_move_direction = nil
 	self.str_adjust_direction = nil
-	self.num_attack_power = nil
+	self.num_attack_power = nil	
 
-	Event:FireEvent("CharacterAdd", self.body, hp, x, y, tb_construct)
+	local sprites = Construct:BuildTank(cc_layer, x, y, tb_construct)
+	local character = CharacterMgr:Create(hp, x, y, sprites)
+	self.id = character:GetId()
+
+	return 1
 end
 
 function Player:Uninit()
+	CharacterMgr:Destory(self.id)
 	self.is_run = nil
 	self.hp = nil
 	self.x = nil
 	self.y = nil
-	self.tb_sprite = nil
-	self.body = nil
-	self.weapon = nil
-	self.weapon_type = nil
-	self.motor_type = nil
-
+	self.id = nil
 	self.str_move_direction = nil
 	self.str_adjust_direction = nil
-	self.num_attack_power = nil
-	Event:FireEvent("PlayerUnInit")
+	self.num_attack_power = nil	
 end
 
-function Player:SetHP(hp)
-	self.hp = hp
-end
-
-function Player:GetHP()
-	return self.hp
+function Player:GetCharacter()
+	local tb = CharacterMgr:GetById(self.id)
+	if not tb then
+		assert(false)
+		return
+	end
+	return tb
 end
 
 function Player:GetBody()
-	return self.body
+	local tb = self:GetCharacter()
+	if not tb then
+		return
+	end
+	return tb:GetBody()
+end
+
+function Player:GetWeapon()
+	local tb = self:GetCharacter()
+	if not tb then
+		return
+	end
+	return tb:GetWeapon()
 end
 
 function Player:GetMotor()
-	return self.tb_motor
+	local tb = self:GetCharacter()
+	if not tb then
+		return
+	end
+	return tb:GetMotor()
 end
 
 function Player:GetPosition()
-	return self.body:getPosition()
-end
-
-function Player:GetWeaponAngle()
-	local rotation_body = self.body:getRotation()
-	local rotation = math.floor((rotation_body + self.weapon:getRotation()))
-	return -rotation % 360, rotation_body
+	return self:GetBody():getPosition()
 end
 
 function Player:GetWeaponType()
-	return self.weapon_type
+	local tb = self:GetCharacter()
+	if not tb then
+		return
+	end
+	return tb:GetWeaponType()
+end
+
+function Player:GetWeaponAngle()
+	local rotation_body = self:GetBody():getRotation()
+	local rotation = math.floor((rotation_body + self:GetWeapon():getRotation()))
+	return -rotation % 360, rotation_body
 end
 
 function Player:OnActive(frame)
@@ -86,7 +99,7 @@ function Player:OnActive(frame)
 
 	if frame % 3 == 0 then
 		if self.str_move_direction then
-			local tb_motor = self.tb_motor
+			local tb_motor = self:GetMotor()
 			local torque = Motor:Move(tb_motor, self.str_move_direction)
 			Event:FireEvent("BodyMove", torque)
 		end
@@ -94,7 +107,7 @@ function Player:OnActive(frame)
 
 	if frame % 2 == 0 then
 		if self.str_adjust_direction then
-			local weapon = self.weapon
+			local weapon = self:GetWeapon()
 			local rotation = weapon:getRotation()
 			local delta_roataion = 1
 			if self.str_adjust_direction == "up" then
@@ -125,7 +138,7 @@ function Player:OnActive(frame)
 end
 
 function Player:UpdatePosition()
-	local x, y = self.body:getPosition()
+	local x, y = self:GetBody():getPosition()
 	if math.floor(x) ~= self.x or math.floor(y) ~= self.y then
 		self.x = math.floor(x)
 		self.y = math.floor(y)

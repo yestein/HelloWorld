@@ -190,4 +190,12 @@ public:
         float float_position_x,
         float float_position_y
     );
+
+	int ClipperPolygonByShape(
+        GameSprite* ptr_gamesprite,
+        const std::string &shape_name,
+        float float_position_x,
+        float float_position_y
+    );
+
 };

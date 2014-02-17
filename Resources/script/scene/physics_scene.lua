@@ -6,7 +6,7 @@
 --===================================================
 
 local Scene = SceneMgr:GetClass("PhysicsScene", 1)
-Scene.tb_property = {
+Scene.property = {
     can_touch     = 1, --可接受触摸事件
     can_pick      = 1, --可用鼠标拖拽物理刚体
     can_drag      = 1, --可拖拽屏幕

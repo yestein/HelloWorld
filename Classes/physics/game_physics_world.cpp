@@ -1067,7 +1067,6 @@ BOOL GamePhysicsWorld::ClipperPolygonByCircle(
 	int num_result = FALSE;
 	int num_ret_code = FALSE;
 
-
     b2Body* ptr_b2body_old = NULL;
     b2Fixture* ptr_b2fixture = NULL;
     b2Body* ptr_b2body_new = NULL;
@@ -1155,6 +1154,103 @@ Exit0:
 	return num_result;
 }
 
+BOOL GamePhysicsWorld::ClipperPolygonByShape(
+    GameSprite* ptr_gamesprite,
+    const std::string &shape_name,
+    float float_position_x,
+    float float_position_y
+    )
+{
+    int num_result = FALSE;
+    int num_ret_code = FALSE;
+
+    b2Body* ptr_b2body_old = NULL;
+    b2Fixture* ptr_b2fixture = NULL;
+    b2Body* ptr_b2body_new = NULL;
+    b2BodyDef bodyDef;
+    b2Concave b2concave;
+    ClipperLib::Paths clipper_paths_clipper(1);
+    float float_offset_x = 0.0f;
+    float float_offset_y = 0.0f;
+
+
+    KGLOG_PROCESS_ERROR(ptr_gamesprite);
+    ptr_b2body_old = ptr_gamesprite->GetB2Body();
+    KGLOG_PROCESS_ERROR(ptr_b2body_old);
+
+    bodyDef.position = ptr_b2body_old->GetPosition();
+    float_offset_x = float_position_x - bodyDef.position.x * PTM_RATIO;
+    float_offset_y = float_position_y - bodyDef.position.y * PTM_RATIO;
+    bodyDef.type = ptr_b2body_old->GetType();
+    bodyDef.userData = ptr_b2body_old->GetUserData();
+    ptr_b2body_new = m_ptr_b2world->CreateBody(&bodyDef);
+
+    ptr_b2fixture = ptr_b2body_old->GetFixtureList();
+    KGLOG_PROCESS_ERROR(ptr_b2fixture);    
+
+    num_ret_code = getPolygonFromCache(shape_name, &clipper_paths_clipper, float_offset_x, float_offset_y);
+    KGLOG_PROCESS_ERROR(num_ret_code);
+
+    while (ptr_b2fixture)
+    {
+        ClipperLib::Paths clipper_paths_main(1);
+
+        ClipperLib::Paths clipper_paths_result;
+        ClipperLib::Clipper clipper;
+
+        num_ret_code = getPolygonFormBody(ptr_b2fixture, &clipper_paths_main);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.AddPaths(clipper_paths_main, ptSubject, true);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.AddPaths(clipper_paths_clipper, ptClip, true);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        num_ret_code = clipper.Execute(ClipperLib::ctDifference, clipper_paths_result, pftNonZero, pftNonZero);
+        KGLOG_PROCESS_ERROR(num_ret_code);
+
+        Paths::iterator it_group = clipper_paths_result.begin();
+        for(NULL; it_group != clipper_paths_result.end(); ++it_group)
+        {
+            Path::iterator it = it_group->begin();
+            b2Vec2 vec_vertices[1000];
+            int count_vertices = 0;
+
+            b2FixtureDef b2fixturedef_new;
+            b2fixturedef_new.restitution = ptr_b2fixture->GetRestitution();
+            b2fixturedef_new.friction = ptr_b2fixture->GetFriction();
+            b2fixturedef_new.density = ptr_b2fixture->GetDensity();
+
+            for(NULL; it != it_group->end(); ++it)
+            {
+                vec_vertices[count_vertices++].Set(float(it->X) / (PTM_RATIO * CLIPPER_RATIO), float(it->Y) / (PTM_RATIO * CLIPPER_RATIO));
+            }
+            num_ret_code = b2concave.Create(ptr_b2body_new, &b2fixturedef_new, vec_vertices, count_vertices);
+            KGLOG_PROCESS_ERROR(num_ret_code);
+        }
+        ptr_b2fixture = ptr_b2fixture->GetNext();
+    }
+
+    num_ret_code = ptr_gamesprite->SetB2Body(ptr_b2body_new);
+    KGLOG_PROCESS_ERROR(num_ret_code);
+
+    m_ptr_b2world->DestroyBody(ptr_b2body_old);
+    ptr_b2body_old = NULL;
+
+    num_result = TRUE;
+Exit0:
+    if (!num_result)
+    {
+        if(ptr_b2body_new)
+        {
+            m_ptr_b2world->DestroyBody(ptr_b2body_new);
+            ptr_b2body_new = NULL;
+        }
+    }
+    return num_result;
+}
+
 BOOL GamePhysicsWorld::getPolygonFormBody(b2Fixture* ptr_b2fixture, ClipperLib::Paths* ptr_clipper_paths)
 {
 	int num_result = FALSE;
@@ -1187,29 +1283,28 @@ BOOL GamePhysicsWorld::getPolygonFromCache(const std::string &shape_name, Clippe
     GB2FixtureDef* ptr_gb2_fixture_def = NULL;
     GB2ShapeCache* ptr_gb2_shape_cache = GB2ShapeCache::sharedGB2ShapeCache();
 
-//     KGLOG_PROCESS_ERROR(ptr_gb2_shape_cache);
-// 
-//     ptr_gb2_fixture_def = ptr_gb2_shape_cache->GetFixtures(shape_name);
-//     KGLOG_PROCESS_ERROR(ptr_gb2_fixture_def);
-// 
-//     while (ptr_gb2_fixture_def)
-//     {
-//         b2FixtureDef* ptr_b2fixture_def = &ptr_gb2_fixture_def->fixture;
-//         KGLOG_PROCESS_ERROR(ptr_b2fixture_def);
-// 
-//         const b2Shape* ptr_b2shape = ptr_b2fixture_def->shape;
-//         KGLOG_PROCESS_ERROR(ptr_b2shape->GetType() == b2Shape::e_polygon);
-// 
-//         const b2PolygonShape* ptr_b2polygonshape = (const b2PolygonShape*)ptr_b2shape;
-// 
-//         for (int i = 0;i < ptr_b2polygonshape->m_vertexCount; i++)
-//         {
-//             int integer_vertice_x = ptr_b2polygonshape->m_vertices[i].x * PTM_RATIO;
-//             int integer_vertice_y = ptr_b2polygonshape->m_vertices[i].y * PTM_RATIO;
-//             (*ptr_clipper_paths)[0].push_back(IntPoint((integer_vertice_x + float_offset_x) * 1000, (integer_vertice_y + float_offset_y) * 1000));
-//         }
-//         ptr_gb2_fixture_def = ptr_gb2_fixture_def->next;
-//     }
+    KGLOG_PROCESS_ERROR(ptr_gb2_shape_cache);
+
+    ptr_gb2_fixture_def = ptr_gb2_shape_cache->GetFixtures(shape_name);
+    KGLOG_PROCESS_ERROR(ptr_gb2_fixture_def);
+
+    if (ptr_gb2_fixture_def)
+    {
+        b2FixtureDef* ptr_b2fixture_def = &ptr_gb2_fixture_def->fixture;
+        KGLOG_PROCESS_ERROR(ptr_b2fixture_def);
+
+        const b2Shape* ptr_b2shape = ptr_b2fixture_def->shape;
+        KGLOG_PROCESS_ERROR(ptr_b2shape->GetType() == b2Shape::e_polygon);
+
+        const b2PolygonShape* ptr_b2polygonshape = (const b2PolygonShape*)ptr_b2shape;
+
+        for (int i = 0;i < ptr_b2polygonshape->m_vertexCount; i++)
+        {
+            int integer_vertice_x = ptr_b2polygonshape->m_vertices[i].x * PTM_RATIO;
+            int integer_vertice_y = ptr_b2polygonshape->m_vertices[i].y * PTM_RATIO;
+            (*ptr_clipper_paths)[0].push_back(IntPoint((integer_vertice_x + float_offset_x) * 1000, (integer_vertice_y + float_offset_y) * 1000));
+        }
+    }
     num_result = TRUE;
 Exit0:
 	return num_result;

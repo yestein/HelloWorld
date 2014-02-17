@@ -26,7 +26,7 @@ function WheelCrawler:Create(layer, x, y, body, tb_param)
 	-- 	return
 	-- end
 
-	local tb_property = {
+	local property = {
 		density       = tb_param.density or 1,
 		friction      = tb_param.friction or 10,
 		restitution   = tb_param.restitution or 0.5,
@@ -36,9 +36,9 @@ function WheelCrawler:Create(layer, x, y, body, tb_param)
 		mask_bits     = Physics.MASK_GROUND,
 	}
     local width_body_half = crawler_belt_width / 2
-	local wheel_back, radius_back     = Physics:CreateCircleSprite(image_wheel, x - width_body_half, y, tb_property)
-	local wheel_middle, radius_middle = Physics:CreateCircleSprite(image_wheel, x, y + 5, tb_property)
-	local wheel_front, radius_front   = Physics:CreateCircleSprite(image_wheel, x + width_body_half, y,tb_property)
+	local wheel_back, radius_back     = Physics:CreateCircleSprite(image_wheel, x - width_body_half, y, property)
+	local wheel_middle, radius_middle = Physics:CreateCircleSprite(image_wheel, x, y + 5, property)
+	local wheel_front, radius_front   = Physics:CreateCircleSprite(image_wheel, x + width_body_half, y,property)
 	
 	local joint_body_wheel_back = PhysicsWorld:CreateRevoluteJoint(
     	body, - width_body_half, 0,
@@ -75,16 +75,16 @@ function WheelCrawler:Create(layer, x, y, body, tb_param)
 	-- 	{-length_crawler_belt / 4, -radius_front - height_crawler / 2,},
 	-- }
 
-	-- tb_property.mask_bits = Physics.MASK_GROUND
-	-- tb_property.density = 2
-	-- tb_property.friction = 10
+	-- property.mask_bits = Physics.MASK_GROUND
+	-- property.density = 2
+	-- property.friction = 10
 	-- for i = 1, 2 do
 	-- 	tb_crawler_group[i] = {}
 	-- 	local tb_crawler = tb_crawler_group[i]
 	-- 	for j = 1, num_group_crawler do
 	-- 		local crawler_x = x + offset[i][1] + 0.5 * width_crawler + (j - 1) * width_crawler_width_calc
 	-- 		local crawler_y = y + offset[i][2]
-	-- 		local sprite_crawler = Physics:CreateBoxSprite(image_crawler, crawler_x, crawler_y, tb_property)
+	-- 		local sprite_crawler = Physics:CreateBoxSprite(image_crawler, crawler_x, crawler_y, property)
 	-- 		tb_crawler[#tb_crawler + 1] = sprite_crawler
 	-- 		tb_crawler_total[#tb_crawler_total + 1] = sprite_crawler
 	-- 		if j > 1 then
